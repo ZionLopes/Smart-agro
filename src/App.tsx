@@ -11,9 +11,11 @@ import Irrigation from './pages/Irrigation';
 import AIInsights from './pages/AIInsights';
 import Login from './pages/Login';
 import AIChat from './components/AIChat';
+import { supabase } from './lib/supabase';
 
-function Sidebar() {
+function Sidebar({ onLogout }: { onLogout: () => void }) {
   const location = useLocation();
+
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/analytics', label: 'Analytics', icon: LineChart },
@@ -23,46 +25,39 @@ function Sidebar() {
   ];
 
   return (
-    <div className="w-64 h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white hidden md:flex flex-col shadow-2xl z-20 sticky top-0">
-      <div className="p-6 flex items-center justify-center border-b border-gray-700">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/30">
-            <Droplet size={24} className="text-white" />
-          </div>
-          <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-300">
-            SmartAgri
-          </h1>
+    <div className="hidden md:flex flex-col w-64 bg-gray-900 shadow-2xl relative z-20 h-screen">
+      <div className="flex items-center justify-center h-20 border-b border-gray-800 space-x-3">
+        <div className="bg-green-500 p-2 rounded-xl">
+          <Droplet className="text-white h-6 w-6" />
         </div>
+        <h1 className="text-2xl font-extrabold text-white tracking-wider">SmartAgri</h1>
       </div>
-      
-      <nav className="flex-1 p-4 space-y-2 mt-4">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
-                isActive 
-                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/20 translate-x-2' 
+      <nav className="flex-1 px-4 py-8 space-y-2">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `flex items-center px-4 py-3 rounded-xl transition-all duration-300 ${
+                isActive
+                  ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/10 text-green-400 border border-green-500/30'
                   : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-              }`}
-            >
-              <item.icon size={20} className={isActive ? 'animate-pulse' : ''} />
-              <span className="font-medium">{item.label}</span>
-            </NavLink>
-          );
-        })}
+              }`
+            }
+          >
+            <item.icon className="h-5 w-5 mr-3" />
+            <span className="font-semibold">{item.label}</span>
+          </NavLink>
+        ))}
       </nav>
       
-      <div className="p-6 border-t border-gray-700">
-        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
-          <p className="text-xs text-gray-400 mb-1">LoRaWAN Gateway</p>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
-            <p className="text-sm font-semibold text-green-400">Online & Connected</p>
-          </div>
-        </div>
+      <div className="p-4 border-t border-gray-800">
+        <button 
+          onClick={onLogout}
+          className="w-full flex items-center justify-center px-4 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl font-semibold transition-colors"
+        >
+          Logout
+        </button>
       </div>
     </div>
   );
@@ -88,6 +83,11 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAuthenticated(false);
+  };
+
   if (!isAuthenticated) {
     return <Login onLogin={() => setIsAuthenticated(true)} />;
   }
@@ -102,7 +102,7 @@ export default function App() {
           <div className="absolute top-[20%] left-[40%] w-[30%] h-[30%] rounded-full bg-purple-400/10 blur-[100px] animate-pulse" style={{ animationDelay: '4s' }}></div>
         </div>
 
-        <Sidebar />
+        <Sidebar onLogout={handleLogout} />
         
         {/* Mobile Header */}
         <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-gray-900 flex items-center justify-between px-4 z-30 shadow-lg">

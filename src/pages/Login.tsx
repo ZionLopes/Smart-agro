@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Lock, User, Leaf, ArrowRight } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface LoginProps {
   onLogin: () => void;
@@ -10,20 +11,34 @@ export default function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSignUp, setIsSignUp] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    setError(null);
+    
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        alert('Signup successful! You can now log in.');
+        setIsSignUp(false);
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        onLogin();
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during authentication.');
+    } finally {
       setLoading(false);
-      onLogin();
-    }, 1500);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 relative overflow-hidden font-sans">
-      {/* Animated Background Graphics */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-green-500/20 blur-[120px] animate-pulse"></div>
         <div className="absolute bottom-[10%] -right-[10%] w-[40%] h-[60%] rounded-full bg-blue-500/20 blur-[150px] animate-pulse" style={{ animationDelay: '2s' }}></div>
@@ -43,9 +58,11 @@ export default function Login({ onLogin }: LoginProps) {
           </div>
           
           <h2 className="text-3xl font-extrabold text-white text-center mb-2 tracking-tight">SmartAgri</h2>
-          <p className="text-gray-400 text-center mb-8">Sign in to your farm dashboard</p>
+          <p className="text-gray-400 text-center mb-8">{isSignUp ? 'Create a new account' : 'Sign in to your farm dashboard'}</p>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          {error && <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 text-sm">{error}</div>}
+
+          <form onSubmit={handleAuth} className="space-y-6">
             <div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -78,14 +95,6 @@ export default function Login({ onLogin }: LoginProps) {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center">
-                <input type="checkbox" className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-green-500 focus:ring-green-500 focus:ring-offset-gray-900" />
-                <span className="ml-2 text-gray-300">Remember me</span>
-              </label>
-              <a href="#" className="text-green-400 hover:text-green-300 transition-colors">Forgot password?</a>
-            </div>
-
             <button
               type="submit"
               disabled={loading}
@@ -95,11 +104,21 @@ export default function Login({ onLogin }: LoginProps) {
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <>
-                  Sign In
+                  {isSignUp ? 'Create Account' : 'Sign In'}
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </>
               )}
             </button>
+            
+            <div className="text-center mt-4">
+              <button 
+                type="button" 
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+              </button>
+            </div>
           </form>
         </div>
       </motion.div>

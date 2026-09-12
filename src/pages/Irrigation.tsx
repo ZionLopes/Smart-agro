@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useData } from '../context/DataContext';
-import { Power, Droplet } from 'lucide-react';
+import { Power, Droplet, Sparkles, Settings2 } from 'lucide-react';
 
 const containerVariants = {
   hidden: { opacity: 0, x: -20 },
@@ -13,7 +13,7 @@ const containerVariants = {
 };
 
 export default function Irrigation() {
-  const { valveOpen, setValveOpen } = useData();
+  const { valveOpen, setValveOpen, irrigationMode, setIrrigationMode } = useData();
 
   return (
     <motion.div 
@@ -23,9 +23,30 @@ export default function Irrigation() {
       exit="exit"
       className="p-8 h-full flex flex-col items-center justify-center"
     >
-      <div className="mb-12 text-center">
+      <div className="mb-8 text-center">
         <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Actuation Control</h1>
         <p className="text-gray-500 mt-2 text-lg">Send downlink commands to the LoRaWAN Node</p>
+      </div>
+
+      <div className="flex bg-white/70 backdrop-blur-xl p-1 rounded-2xl shadow-lg border border-white/50 mb-12 relative overflow-hidden">
+        <button 
+          onClick={() => setIrrigationMode('manual')}
+          className={`relative z-10 px-6 py-3 rounded-xl font-bold flex items-center space-x-2 transition-colors ${irrigationMode === 'manual' ? 'text-white' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          <Settings2 size={20} />
+          <span>Manual Mode</span>
+        </button>
+        <button 
+          onClick={() => setIrrigationMode('auto')}
+          className={`relative z-10 px-6 py-3 rounded-xl font-bold flex items-center space-x-2 transition-colors ${irrigationMode === 'auto' ? 'text-white' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          <Sparkles size={20} />
+          <span>AI Auto Mode</span>
+        </button>
+        {/* Background slide indicator */}
+        <div 
+          className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl transition-all duration-300 z-0 ${irrigationMode === 'auto' ? 'left-[calc(50%+2px)]' : 'left-1'}`}
+        ></div>
       </div>
 
       <div className="relative">
@@ -48,14 +69,17 @@ export default function Irrigation() {
         )}
 
         <motion.button 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setValveOpen(!valveOpen)}
+          whileHover={irrigationMode === 'manual' ? { scale: 1.05 } : {}}
+          whileTap={irrigationMode === 'manual' ? { scale: 0.95 } : {}}
+          onClick={() => {
+            if (irrigationMode === 'manual') setValveOpen(!valveOpen);
+          }}
+          disabled={irrigationMode === 'auto'}
           className={`relative z-10 flex flex-col items-center justify-center w-64 h-64 rounded-full text-white font-bold text-2xl transition-all duration-500 shadow-2xl ${
             valveOpen 
               ? 'bg-gradient-to-br from-blue-400 to-blue-600 shadow-blue-500/50' 
               : 'bg-gradient-to-br from-gray-400 to-gray-600 shadow-gray-500/50'
-          }`}
+          } ${irrigationMode === 'auto' ? 'cursor-not-allowed opacity-90' : ''}`}
         >
           <Power className="mb-4 h-16 w-16" />
           {valveOpen ? 'VALVE OPEN' : 'VALVE CLOSED'}

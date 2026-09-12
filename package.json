@@ -20,6 +20,7 @@
     "vite": "^8.2.2"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.116.0",
     "framer-motion": "^13.2.0",
     "lucide-react": "^1.41.0",
     "react": "^19.2.8",

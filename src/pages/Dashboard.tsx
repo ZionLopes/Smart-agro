@@ -22,6 +22,8 @@ export default function Dashboard() {
   if (!currentData) return <div className="p-8">Loading...</div>;
 
   const isAlert = currentData.soilMoisture < moistureThreshold;
+  const isTempAlert = currentData.airTemp > 35;
+  const isHumidityAlert = currentData.humidity < 30;
 
   return (
     <motion.div 
@@ -37,22 +39,46 @@ export default function Dashboard() {
       </motion.div>
 
       <AnimatePresence>
-        {isAlert && (
+        {(isAlert || isTempAlert || isHumidityAlert) && (
           <motion.div 
             initial={{ opacity: 0, height: 0, mb: 0 }}
             animate={{ opacity: 1, height: 'auto', mb: 24 }}
             exit={{ opacity: 0, height: 0, mb: 0 }}
-            className="overflow-hidden"
+            className="overflow-hidden space-y-4"
           >
-            <div className="bg-gradient-to-r from-red-500 to-rose-500 rounded-2xl shadow-xl shadow-red-500/20 p-6 flex items-center text-white">
-              <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 1 }}>
-                <AlertTriangle className="mr-4 h-8 w-8" />
-              </motion.div>
-              <div>
-                <h3 className="text-lg font-bold">Critical Alert: Low Soil Moisture</h3>
-                <p className="opacity-90">Current moisture is {currentData.soilMoisture.toFixed(1)}%, which is below the {moistureThreshold}% threshold.</p>
+            {isAlert && (
+              <div className="bg-gradient-to-r from-red-500 to-rose-500 rounded-2xl shadow-xl shadow-red-500/20 p-6 flex items-center text-white">
+                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 1 }}>
+                  <AlertTriangle className="mr-4 h-8 w-8" />
+                </motion.div>
+                <div>
+                  <h3 className="text-lg font-bold">Critical Alert: Low Soil Moisture</h3>
+                  <p className="opacity-90">Current moisture is {currentData.soilMoisture.toFixed(1)}%, which is below the {moistureThreshold}% threshold.</p>
+                </div>
               </div>
-            </div>
+            )}
+            {isTempAlert && (
+              <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl shadow-xl shadow-orange-500/20 p-6 flex items-center text-white">
+                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 1 }}>
+                  <ThermometerSun className="mr-4 h-8 w-8" />
+                </motion.div>
+                <div>
+                  <h3 className="text-lg font-bold">Warning: High Temperature</h3>
+                  <p className="opacity-90">Air temperature has exceeded 35°C ({currentData.airTemp.toFixed(1)}°C). Risk of crop heat stress.</p>
+                </div>
+              </div>
+            )}
+            {isHumidityAlert && (
+              <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-2xl shadow-xl shadow-yellow-500/20 p-6 flex items-center text-white">
+                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 1 }}>
+                  <Wind className="mr-4 h-8 w-8" />
+                </motion.div>
+                <div>
+                  <h3 className="text-lg font-bold">Warning: Low Humidity</h3>
+                  <p className="opacity-90">Relative humidity has dropped to {currentData.humidity.toFixed(1)}%.</p>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -60,11 +86,12 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="Soil Moisture" value={`${currentData.soilMoisture.toFixed(1)}%`} icon={<Droplet size={32} />} color="from-blue-400 to-blue-600" alert={isAlert} />
         <StatCard title="Soil Temp" value={`${currentData.soilTemp.toFixed(1)}°C`} icon={<Thermometer size={32} />} color="from-orange-400 to-orange-600" />
-        <StatCard title="Air Temp" value={`${currentData.airTemp.toFixed(1)}°C`} icon={<ThermometerSun size={32} />} color="from-red-400 to-red-600" />
-        <StatCard title="Humidity" value={`${currentData.humidity.toFixed(1)}%`} icon={<Wind size={32} />} color="from-cyan-400 to-cyan-600" />
+        <StatCard title="Air Temp" value={`${currentData.airTemp.toFixed(1)}°C`} icon={<ThermometerSun size={32} />} color="from-red-400 to-red-600" alert={isTempAlert} />
+        <StatCard title="Humidity" value={`${currentData.humidity.toFixed(1)}%`} icon={<Wind size={32} />} color="from-cyan-400 to-cyan-600" alert={isHumidityAlert} />
         <StatCard title="Soil pH" value={`${currentData.pH.toFixed(2)}`} icon={<Beaker size={32} />} color="from-purple-400 to-purple-600" />
         <StatCard title="Solar Rad" value={`${currentData.solarRadiation.toFixed(0)} W/m²`} icon={<Sun size={32} />} color="from-yellow-400 to-amber-500" />
         <StatCard title="Leaf Wetness" value={`${currentData.leafWetness.toFixed(0)}%`} icon={<CloudRain size={32} />} color="from-indigo-400 to-indigo-600" />
+        
         
         {/* Placeholder for camera or drone view */}
         <motion.div variants={itemVariants} className="bg-gray-900 rounded-3xl overflow-hidden relative shadow-2xl group lg:col-span-1">

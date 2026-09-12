@@ -19,6 +19,8 @@ interface DataContextType {
   setValveOpen: (open: boolean) => void;
   moistureThreshold: number;
   setMoistureThreshold: (threshold: number) => void;
+  irrigationMode: 'manual' | 'auto';
+  setIrrigationMode: (mode: 'manual' | 'auto') => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -47,11 +49,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<SensorData[]>([]);
   const [valveOpen, setValveOpen] = useState(false);
   const [moistureThreshold, setMoistureThreshold] = useState(40);
+  const [irrigationMode, setIrrigationMode] = useState<'manual' | 'auto'>('manual');
 
   useEffect(() => {
     setData(generateInitialData());
     
-    // Simulate real-time updates every 5 seconds
     const interval = setInterval(() => {
       setData(prevData => {
         const newData = [...prevData.slice(1)];
@@ -59,6 +61,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const last = prevData[prevData.length - 1];
         
         let newMoisture = last.soilMoisture + (Math.random() - 0.5) * 5;
+        
+        // AI Auto Mode logic
+        if (irrigationMode === 'auto') {
+          if (newMoisture < moistureThreshold && !valveOpen) {
+            setValveOpen(true);
+          } else if (newMoisture > moistureThreshold + 20 && valveOpen) {
+            setValveOpen(false);
+          }
+        }
+
         if (valveOpen) {
           newMoisture += 5;
         }
@@ -80,12 +92,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [valveOpen]);
+  }, [valveOpen, irrigationMode, moistureThreshold]);
 
   const currentData = data.length > 0 ? data[data.length - 1] : null;
 
   return (
-    <DataContext.Provider value={{ data, currentData, valveOpen, setValveOpen, moistureThreshold, setMoistureThreshold }}>
+    <DataContext.Provider value={{ data, currentData, valveOpen, setValveOpen, moistureThreshold, setMoistureThreshold, irrigationMode, setIrrigationMode }}>
       {children}
     </DataContext.Provider>
   );
