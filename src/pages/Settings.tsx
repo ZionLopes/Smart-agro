@@ -12,7 +12,14 @@ const containerVariants = {
 };
 
 export default function Settings() {
-  const { moistureThreshold, setMoistureThreshold } = useData();
+  const { moistureThreshold, setMoistureThreshold, selectedCrop, setSelectedCrop } = useData();
+
+  const crops = [
+    { name: 'Tomatoes', target: 50 },
+    { name: 'Wheat', target: 35 },
+    { name: 'Corn', target: 45 },
+    { name: 'Lettuce', target: 60 },
+  ];
 
   return (
     <motion.div 
@@ -27,13 +34,31 @@ export default function Settings() {
         <p className="text-gray-500 mt-1">Configure alerts and node parameters</p>
       </div>
 
+      <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 p-8 border border-white/50 mb-8">
+        <h3 className="text-xl font-bold text-gray-800 mb-6 border-b border-gray-200/50 pb-4">Dynamic Crop Profile</h3>
+        <p className="text-gray-500 mb-4">Select the crop you are currently growing. The AI will automatically adjust optimal threshold values.</p>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {crops.map(crop => (
+            <button
+              key={crop.name}
+              onClick={() => setSelectedCrop(crop.name)}
+              className={`p-4 rounded-xl border-2 transition-all ${selectedCrop === crop.name ? 'border-green-500 bg-green-50 shadow-lg shadow-green-500/20' : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'}`}
+            >
+              <span className={`block font-bold text-lg ${selectedCrop === crop.name ? 'text-green-700' : 'text-gray-700'}`}>{crop.name}</span>
+              <span className="text-sm text-gray-500">Target: {crop.target}%</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 p-8 border border-white/50">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 border-b border-gray-200/50 pb-4">Alert Thresholds</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-6 border-b border-gray-200/50 pb-4">Manual Overrides</h3>
         
         <div className="space-y-8">
           <div>
             <label className="flex justify-between text-gray-700 font-medium mb-4">
-              <span>Minimum Soil Moisture Threshold</span>
+              <span>Manual Soil Moisture Threshold</span>
               <span className="text-blue-600 font-bold">{moistureThreshold}%</span>
             </label>
             <input 

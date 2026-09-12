@@ -21,6 +21,8 @@ interface DataContextType {
   setMoistureThreshold: (threshold: number) => void;
   irrigationMode: 'manual' | 'auto';
   setIrrigationMode: (mode: 'manual' | 'auto') => void;
+  selectedCrop: string;
+  setSelectedCrop: (crop: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -50,6 +52,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [valveOpen, setValveOpen] = useState(false);
   const [moistureThreshold, setMoistureThreshold] = useState(40);
   const [irrigationMode, setIrrigationMode] = useState<'manual' | 'auto'>('manual');
+  const [selectedCrop, setSelectedCrop] = useState('Tomatoes');
+
+  // Dynamic Crop Profiles
+  useEffect(() => {
+    switch(selectedCrop) {
+      case 'Tomatoes': setMoistureThreshold(50); break;
+      case 'Wheat': setMoistureThreshold(35); break;
+      case 'Corn': setMoistureThreshold(45); break;
+      case 'Lettuce': setMoistureThreshold(60); break;
+    }
+  }, [selectedCrop]);
 
   useEffect(() => {
     setData(generateInitialData());
@@ -79,12 +92,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         newData.push({
           time: `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`,
           soilMoisture: newMoisture,
-          soilTemp: Math.max(10, Math.min(35, last.soilTemp + (Math.random() - 0.5) * 2)),
-          airTemp: Math.max(10, Math.min(45, last.airTemp + (Math.random() - 0.5) * 2)),
-          humidity: Math.max(20, Math.min(100, last.humidity + (Math.random() - 0.5) * 4)),
-          pH: Math.max(4, Math.min(9, last.pH + (Math.random() - 0.5) * 0.1)),
-          windSpeed: Math.max(0, Math.min(50, last.windSpeed + (Math.random() - 0.5) * 3)),
-          solarRadiation: Math.max(0, Math.min(1200, last.solarRadiation + (Math.random() - 0.5) * 50)),
+          soilTemp: last.soilTemp + (Math.random() - 0.5),
+          airTemp: last.airTemp + (Math.random() - 0.5),
+          humidity: Math.max(0, Math.min(100, last.humidity + (Math.random() - 0.5) * 5)),
+          pH: Math.max(0, Math.min(14, last.pH + (Math.random() - 0.5) * 0.1)),
+          windSpeed: Math.max(0, last.windSpeed + (Math.random() - 0.5) * 2),
+          solarRadiation: Math.max(0, last.solarRadiation + (Math.random() - 0.5) * 50),
           leafWetness: Math.max(0, Math.min(100, last.leafWetness + (Math.random() - 0.5) * 10)),
         });
         return newData;
@@ -97,7 +110,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const currentData = data.length > 0 ? data[data.length - 1] : null;
 
   return (
-    <DataContext.Provider value={{ data, currentData, valveOpen, setValveOpen, moistureThreshold, setMoistureThreshold, irrigationMode, setIrrigationMode }}>
+    <DataContext.Provider value={{ data, currentData, valveOpen, setValveOpen, moistureThreshold, setMoistureThreshold, irrigationMode, setIrrigationMode, selectedCrop, setSelectedCrop }}>
       {children}
     </DataContext.Provider>
   );

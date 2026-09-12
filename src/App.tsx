@@ -1,11 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutDashboard, LineChart, Settings, Droplet, Menu, Brain, History as HistoryIcon } from 'lucide-react';
+import { LayoutDashboard, LineChart, Settings, Droplet, Menu, Brain, History as HistoryIcon, Map as MapIcon } from 'lucide-react';
 import { useState } from 'react';
 import { DataProvider } from './context/DataContext';
 
 // Pages
 import Dashboard from './pages/Dashboard';
+import FarmMap from './pages/FarmMap';
 import Analytics from './pages/Analytics';
 import SettingsPage from './pages/Settings';
 import Irrigation from './pages/Irrigation';
@@ -20,6 +21,7 @@ function Sidebar({ onLogout }: { onLogout: () => void }) {
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/map', label: 'Farm Map (GIS)', icon: MapIcon },
     { path: '/history', label: 'History & Export', icon: HistoryIcon },
     { path: '/analytics', label: 'Analytics', icon: LineChart },
     { path: '/irrigation', label: 'Irrigation Control', icon: Droplet },
@@ -73,6 +75,7 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/map" element={<FarmMap />} />
         <Route path="/history" element={<History />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/irrigation" element={<Irrigation />} />
