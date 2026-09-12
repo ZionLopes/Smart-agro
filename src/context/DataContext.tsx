@@ -13,6 +13,22 @@ export interface SensorData {
   leafWetness: number;
 }
 
+export interface Equipment {
+  id: string;
+  name: string;
+  type: 'Tractor' | 'Harvester' | 'Drone';
+  status: 'Active' | 'Idle' | 'Maintenance';
+  fuel: number;
+  location: { lat: number; lng: number };
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  status: 'todo' | 'in-progress' | 'done';
+  priority: 'low' | 'medium' | 'high';
+}
+
 interface DataContextType {
   data: SensorData[];
   currentData: SensorData | null;
@@ -27,6 +43,11 @@ interface DataContextType {
   dbConnected: boolean;
   userLocation: { lat: number; lng: number } | null;
   setUserLocation: (loc: { lat: number; lng: number } | null) => void;
+  equipment: Equipment[];
+  tasks: Task[];
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  isDarkMode: boolean;
+  setIsDarkMode: (dark: boolean) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -60,31 +81,69 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [selectedCrop, setSelectedCrop] = useState('Tomatoes');
   const [dbConnected, setDbConnected] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Request Geolocation on mount
+  // Initial Tasks
+  const [tasks, setTasks] = useState<Task[]>([
+    { id: '1', title: 'Inspect Soil Moisture Sensor (Node Alpha)', status: 'todo', priority: 'high' },
+    { id: '2', title: 'Refuel Tractor 01', status: 'in-progress', priority: 'medium' },
+    { id: '3', title: 'Apply Fertilizer to Sector 4', status: 'done', priority: 'low' },
+  ]);
+
+  // Initial Equipment
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
+
+  // Request Geolocation on mount and set equipment relative to it
   useEffect(() => {
     if (navigator.geolocation) {
       const timeoutId = setTimeout(() => {
-        setUserLocation(prev => prev ? prev : { lat: 36.7783, lng: -119.4179 });
+        const fallback = { lat: 36.7783, lng: -119.4179 };
+        setUserLocation(prev => prev ? prev : fallback);
+        if (equipment.length === 0) {
+           setEquipment([
+             { id: 'eq1', name: 'Tractor 01 (Deere)', type: 'Tractor', status: 'Active', fuel: 45, location: { lat: fallback.lat + 0.001, lng: fallback.lng + 0.002 } },
+             { id: 'eq2', name: 'Harvester 04', type: 'Harvester', status: 'Idle', fuel: 88, location: { lat: fallback.lat - 0.002, lng: fallback.lng - 0.001 } },
+             { id: 'eq3', name: 'AgriDrone Pro', type: 'Drone', status: 'Maintenance', fuel: 12, location: { lat: fallback.lat, lng: fallback.lng } },
+           ]);
+        }
       }, 3000); // 3 second timeout if user ignores prompt
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
           clearTimeout(timeoutId);
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
+          const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
+          setUserLocation(loc);
+          if (equipment.length === 0) {
+             setEquipment([
+               { id: 'eq1', name: 'Tractor 01 (Deere)', type: 'Tractor', status: 'Active', fuel: 45, location: { lat: loc.lat + 0.001, lng: loc.lng + 0.002 } },
+               { id: 'eq2', name: 'Harvester 04', type: 'Harvester', status: 'Idle', fuel: 88, location: { lat: loc.lat - 0.002, lng: loc.lng - 0.001 } },
+               { id: 'eq3', name: 'AgriDrone Pro', type: 'Drone', status: 'Maintenance', fuel: 12, location: { lat: loc.lat, lng: loc.lng } },
+             ]);
+          }
         },
         (error) => {
           clearTimeout(timeoutId);
           console.error("Error getting location:", error);
-          setUserLocation({ lat: 36.7783, lng: -119.4179 }); 
+          const fallback = { lat: 36.7783, lng: -119.4179 };
+          setUserLocation(fallback);
+          if (equipment.length === 0) {
+             setEquipment([
+               { id: 'eq1', name: 'Tractor 01 (Deere)', type: 'Tractor', status: 'Active', fuel: 45, location: { lat: fallback.lat + 0.001, lng: fallback.lng + 0.002 } },
+               { id: 'eq2', name: 'Harvester 04', type: 'Harvester', status: 'Idle', fuel: 88, location: { lat: fallback.lat - 0.002, lng: fallback.lng - 0.001 } },
+               { id: 'eq3', name: 'AgriDrone Pro', type: 'Drone', status: 'Maintenance', fuel: 12, location: { lat: fallback.lat, lng: fallback.lng } },
+             ]);
+          }
         },
         { timeout: 5000 }
       );
     } else {
-      setUserLocation({ lat: 36.7783, lng: -119.4179 });
+      const fallback = { lat: 36.7783, lng: -119.4179 };
+      setUserLocation(fallback);
+      setEquipment([
+        { id: 'eq1', name: 'Tractor 01 (Deere)', type: 'Tractor', status: 'Active', fuel: 45, location: { lat: fallback.lat + 0.001, lng: fallback.lng + 0.002 } },
+        { id: 'eq2', name: 'Harvester 04', type: 'Harvester', status: 'Idle', fuel: 88, location: { lat: fallback.lat - 0.002, lng: fallback.lng - 0.001 } },
+        { id: 'eq3', name: 'AgriDrone Pro', type: 'Drone', status: 'Maintenance', fuel: 12, location: { lat: fallback.lat, lng: fallback.lng } },
+      ]);
     }
   }, []);
 
@@ -235,7 +294,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const currentData = data.length > 0 ? data[data.length - 1] : null;
 
   return (
-    <DataContext.Provider value={{ data, currentData, valveOpen, setValveOpen, moistureThreshold, setMoistureThreshold, irrigationMode, setIrrigationMode, selectedCrop, setSelectedCrop, dbConnected, userLocation, setUserLocation }}>
+    <DataContext.Provider value={{ data, currentData, valveOpen, setValveOpen, moistureThreshold, setMoistureThreshold, irrigationMode, setIrrigationMode, selectedCrop, setSelectedCrop, dbConnected, userLocation, setUserLocation, equipment, tasks, setTasks, isDarkMode, setIsDarkMode }}>
       {children}
     </DataContext.Provider>
   );

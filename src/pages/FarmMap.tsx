@@ -27,7 +27,7 @@ const containerVariants = {
 };
 
 export default function FarmMap() {
-  const { currentData, moistureThreshold, userLocation } = useData();
+  const { currentData, moistureThreshold, userLocation, equipment } = useData();
 
   if (!userLocation) {
     return (
@@ -54,6 +54,14 @@ export default function FarmMap() {
     shadowSize: [41, 41]
   });
 
+  const equipmentIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+  });
+
   return (
     <motion.div 
       variants={containerVariants} 
@@ -62,22 +70,23 @@ export default function FarmMap() {
       exit="exit"
       className="p-8 h-full flex flex-col"
     >
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-          <MapIcon className="text-green-600 h-8 w-8" />
-          Interactive GIS Map
-        </h1>
-        <p className="text-gray-500 mt-2 text-lg">Real-time geospatial monitoring of your LoRaWAN sensor nodes</p>
+      <div className="mb-6">
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Farm Map (GIS)</h1>
+        <p className="text-gray-500 mt-1">Geospatial overview of your autonomous nodes and equipment</p>
       </div>
 
-      <div className="flex-1 bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 border border-white/50 overflow-hidden relative min-h-[600px]">
-        <div className="absolute top-4 right-4 z-[1000] bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-lg border border-gray-100 flex flex-col gap-2">
-          <h3 className="font-bold text-sm text-gray-800 border-b pb-2 mb-1">Node Status</h3>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div> Optimal
+      <div className="flex-1 bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100 relative">
+        {/* Map Legend */}
+        <div className="absolute top-4 right-4 z-[400] bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-gray-100">
+          <h4 className="font-bold text-sm mb-2">Legend</h4>
+          <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+            <div className="w-3 h-3 rounded-full bg-green-500"></div> Optimal Node
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+            <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div> Critical Needs
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div> Critical Needs
+            <div className="w-3 h-3 rounded-full bg-orange-500"></div> Equipment
           </div>
         </div>
 
@@ -131,8 +140,25 @@ export default function FarmMap() {
               </div>
             </Popup>
           </Marker>
+
+          {/* Equipment Markers */}
+          {equipment.map(eq => (
+            <Marker key={eq.id} position={[eq.location.lat, eq.location.lng]} icon={equipmentIcon}>
+              <Popup>
+                <div className="p-2">
+                  <h3 className="font-bold text-lg border-b pb-1 mb-2">{eq.name}</h3>
+                  <div className="space-y-1 text-sm">
+                    <p><strong>Type:</strong> {eq.type}</p>
+                    <p><strong>Status:</strong> {eq.status}</p>
+                    <p><strong>Fuel/Battery:</strong> {eq.fuel}%</p>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
         </MapContainer>
       </div>
+
     </motion.div>
   );
 }

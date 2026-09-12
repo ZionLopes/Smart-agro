@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutDashboard, LineChart, Settings, Droplet, Menu, Brain, History as HistoryIcon, Map as MapIcon, Camera } from 'lucide-react';
-import { useState } from 'react';
-import { DataProvider } from './context/DataContext';
+import { LayoutDashboard, LineChart, Settings, Droplet, Menu, Brain, History as HistoryIcon, Map as MapIcon, Camera, ClipboardList, Tractor } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { DataProvider, useData } from './context/DataContext';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -14,6 +14,8 @@ import Irrigation from './pages/Irrigation';
 import AIInsights from './pages/AIInsights';
 import Login from './pages/Login';
 import History from './pages/History';
+import Tasks from './pages/Tasks';
+import Equipment from './pages/Equipment';
 import AIChat from './components/AIChat';
 import { supabase } from './lib/supabase';
 
@@ -24,10 +26,12 @@ function Sidebar({ onLogout }: { onLogout: () => void }) {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/cameras', label: 'Live Surveillance', icon: Camera },
     { path: '/map', label: 'Farm Map (GIS)', icon: MapIcon },
+    { path: '/equipment', label: 'Equipment Tracking', icon: Tractor },
+    { path: '/tasks', label: 'Work Orders', icon: ClipboardList },
     { path: '/history', label: 'History & Export', icon: HistoryIcon },
     { path: '/analytics', label: 'Analytics', icon: LineChart },
     { path: '/irrigation', label: 'Irrigation Control', icon: Droplet },
-    { path: '/ai-insights', label: 'AI Insights', icon: Brain },
+    { path: '/ai-insights', label: 'AI Yield Predictor', icon: Brain },
     { path: '/settings', label: 'Settings', icon: Settings },
   ];
 
@@ -79,6 +83,8 @@ function AnimatedRoutes() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/cameras" element={<Cameras />} />
         <Route path="/map" element={<FarmMap />} />
+        <Route path="/equipment" element={<Equipment />} />
+        <Route path="/tasks" element={<Tasks />} />
         <Route path="/history" element={<History />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/irrigation" element={<Irrigation />} />
@@ -92,11 +98,21 @@ function AnimatedRoutes() {
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isDarkMode } = useData();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setIsAuthenticated(false);
-  };
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (!isAuthenticated) {
     return <Login onLogin={() => setIsAuthenticated(true)} />;
@@ -104,7 +120,20 @@ export default function App() {
 
   return (
     <Router>
-      <div className="flex min-h-screen bg-gray-50 overflow-hidden font-sans relative">
+      <div className={`flex h-screen overflow-hidden font-sans transition-all duration-500 ${isDarkMode ? 'dark-mode-active' : 'bg-gray-100'}`}>
+        {/* CSS for instant dark mode */}
+        {isDarkMode && (
+          <style>{`
+            .dark-mode-active {
+              background-color: #111827;
+              filter: invert(1) hue-rotate(180deg);
+            }
+            .dark-mode-active img, .dark-mode-active video, .dark-mode-active .leaflet-container {
+              filter: invert(1) hue-rotate(180deg);
+            }
+          `}</style>
+        )}
+
         {/* Animated Background Graphics */}
         <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-green-400/20 blur-[120px] animate-pulse"></div>
@@ -112,7 +141,7 @@ export default function App() {
           <div className="absolute top-[20%] left-[40%] w-[30%] h-[30%] rounded-full bg-purple-400/10 blur-[100px] animate-pulse" style={{ animationDelay: '4s' }}></div>
         </div>
 
-        <Sidebar onLogout={handleLogout} />
+        <Sidebar onLogout={() => supabase.auth.signOut()} />
         
         {/* Mobile Header */}
         <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-gray-900 flex items-center justify-between px-4 z-30 shadow-lg">

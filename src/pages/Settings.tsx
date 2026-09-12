@@ -1,25 +1,43 @@
 import { motion } from 'framer-motion';
+import { Settings as SettingsIcon, Save, Bell, Shield, Smartphone, Moon, Sun } from 'lucide-react';
+import { useState } from 'react';
 import { useData } from '../context/DataContext';
 
 const containerVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
+  hidden: { opacity: 0 },
   visible: { 
-    opacity: 1, 
-    scale: 1,
-    transition: { duration: 0.3 }
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
   },
-  exit: { opacity: 0, scale: 1.05, transition: { duration: 0.2 } }
+  exit: { opacity: 0, transition: { duration: 0.2 } }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { y: 0, opacity: 1 }
 };
 
 export default function Settings() {
-  const { moistureThreshold, setMoistureThreshold, selectedCrop, setSelectedCrop } = useData();
+  const { selectedCrop, setSelectedCrop, moistureThreshold, setMoistureThreshold, isDarkMode, setIsDarkMode } = useData();
+  const [notifications, setNotifications] = useState(true);
+  const [autoUpdate, setAutoUpdate] = useState(true);
+  const [saved, setSaved] = useState(false);
 
-  const crops = [
-    { name: 'Tomatoes', target: 50 },
-    { name: 'Wheat', target: 35 },
-    { name: 'Corn', target: 45 },
-    { name: 'Lettuce', target: 60 },
-  ];
+  const handleSave = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleCropChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const crop = e.target.value;
+    setSelectedCrop(crop);
+    
+    // Auto-adjust threshold based on crop
+    if (crop === 'Tomatoes') setMoistureThreshold(60);
+    if (crop === 'Wheat') setMoistureThreshold(45);
+    if (crop === 'Corn') setMoistureThreshold(55);
+    if (crop === 'Lettuce') setMoistureThreshold(70);
+  };
 
   return (
     <motion.div 
@@ -27,79 +45,120 @@ export default function Settings() {
       initial="hidden" 
       animate="visible" 
       exit="exit"
-      className="p-8 max-w-4xl mx-auto"
+      className="p-8 max-w-4xl mx-auto h-full overflow-y-auto custom-scrollbar"
     >
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">System Configuration</h1>
-        <p className="text-gray-500 mt-1">Configure alerts and node parameters</p>
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+          <SettingsIcon className="text-indigo-600 h-8 w-8" />
+          System Settings
+        </h1>
+        <p className="text-gray-500 mt-2 text-lg">Configure your autonomous farming parameters</p>
       </div>
 
-      <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 p-8 border border-white/50 mb-8">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 border-b border-gray-200/50 pb-4">Dynamic Crop Profile</h3>
-        <p className="text-gray-500 mb-4">Select the crop you are currently growing. The AI will automatically adjust optimal threshold values.</p>
+      <div className="space-y-6">
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {crops.map(crop => (
-            <button
-              key={crop.name}
-              onClick={() => setSelectedCrop(crop.name)}
-              className={`p-4 rounded-xl border-2 transition-all ${selectedCrop === crop.name ? 'border-green-500 bg-green-50 shadow-lg shadow-green-500/20' : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'}`}
+        {/* Appearance Settings */}
+        <motion.div variants={itemVariants} className="bg-white p-6 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100">
+          <h3 className="font-bold text-xl mb-4 text-gray-800 flex items-center gap-2">
+            <Moon className="text-indigo-500" size={20} />
+            Appearance
+          </h3>
+          
+          <div className="flex items-center justify-between py-3 border-b border-gray-100">
+            <div>
+              <p className="font-bold text-gray-800">Dark Mode</p>
+              <p className="text-sm text-gray-500">Enable dark theme for night-time monitoring</p>
+            </div>
+            <button 
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className={`w-14 h-7 rounded-full transition-colors relative ${isDarkMode ? 'bg-indigo-600' : 'bg-gray-300'}`}
             >
-              <span className={`block font-bold text-lg ${selectedCrop === crop.name ? 'text-green-700' : 'text-gray-700'}`}>{crop.name}</span>
-              <span className="text-sm text-gray-500">Target: {crop.target}%</span>
+              <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all shadow-sm ${isDarkMode ? 'left-8' : 'left-1'}`}></div>
             </button>
-          ))}
-        </div>
-      </div>
+          </div>
+        </motion.div>
 
-      <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 p-8 border border-white/50">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 border-b border-gray-200/50 pb-4">Manual Overrides</h3>
-        
-        <div className="space-y-8">
+        {/* Agricultural Parameters */}
+        <motion.div variants={itemVariants} className="bg-white p-6 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100">
+          <h3 className="font-bold text-xl mb-4 text-gray-800 border-b border-gray-100 pb-2">Agronomic Baseline</h3>
+          
+          <div className="mb-6">
+            <label className="block font-bold text-gray-700 mb-2">Active Crop Profile</label>
+            <select 
+              value={selectedCrop} 
+              onChange={handleCropChange}
+              className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="Tomatoes">Tomatoes (High Moisture Demand)</option>
+              <option value="Wheat">Wheat (Drought Tolerant)</option>
+              <option value="Corn">Corn (Moderate Moisture)</option>
+              <option value="Lettuce">Lettuce (Frequent Shallow Watering)</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-2">Changing the crop profile automatically updates AI watering logic.</p>
+          </div>
+
           <div>
-            <label className="flex justify-between text-gray-700 font-medium mb-4">
-              <span>Manual Soil Moisture Threshold</span>
-              <span className="text-blue-600 font-bold">{moistureThreshold}%</span>
-            </label>
+            <label className="block font-bold text-gray-700 mb-2">Irrigation Threshold: {moistureThreshold}%</label>
             <input 
               type="range" 
               min="0" max="100" 
-              value={moistureThreshold}
+              value={moistureThreshold} 
               onChange={(e) => setMoistureThreshold(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
             />
-            <p className="text-sm text-gray-500 mt-2">
-              If the soil moisture drops below this percentage, a critical alert will be triggered on the dashboard.
-            </p>
+            <div className="flex justify-between text-xs text-gray-500 mt-2 font-bold">
+              <span>0% (Dry)</span>
+              <span>100% (Saturated)</span>
+            </div>
           </div>
-        </div>
+        </motion.div>
 
-        <h3 className="text-xl font-bold text-gray-800 mb-6 mt-12 border-b pb-4">LoRaWAN Network Config</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-             <label className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1 block">Spreading Factor (SF)</label>
-             <select className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                <option>SF7 (High speed, short range)</option>
-                <option>SF8</option>
-                <option>SF9</option>
-                <option>SF10</option>
-                <option>SF11</option>
-                <option>SF12 (Low speed, long range)</option>
-             </select>
-           </div>
-           
-           <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-             <label className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1 block">Adaptive Data Rate (ADR)</label>
-             <div className="flex items-center space-x-3 mt-2">
-                <div className="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
-                    <input type="checkbox" name="toggle" id="toggle" className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-green-500 appearance-none cursor-pointer translate-x-6" checked readOnly/>
-                    <label htmlFor="toggle" className="toggle-label block overflow-hidden h-6 rounded-full bg-green-500 cursor-pointer"></label>
-                </div>
-                <span className="font-medium text-gray-700">Enabled</span>
-             </div>
-           </div>
-        </div>
+        {/* System Preferences */}
+        <motion.div variants={itemVariants} className="bg-white p-6 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100">
+          <h3 className="font-bold text-xl mb-4 text-gray-800 border-b border-gray-100 pb-2">System Preferences</h3>
+          
+          <div className="flex items-center justify-between py-3 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <Bell className="text-gray-400" size={20} />
+              <div>
+                <p className="font-bold text-gray-800">Push Notifications</p>
+                <p className="text-sm text-gray-500">Alerts for critical soil moisture drops</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setNotifications(!notifications)}
+              className={`w-12 h-6 rounded-full transition-colors relative ${notifications ? 'bg-indigo-600' : 'bg-gray-300'}`}
+            >
+              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${notifications ? 'left-7' : 'left-1'}`}></div>
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between py-3 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <Shield className="text-gray-400" size={20} />
+              <div>
+                <p className="font-bold text-gray-800">Auto-Update Firmware</p>
+                <p className="text-sm text-gray-500">Keep LoRaWAN nodes updated automatically</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setAutoUpdate(!autoUpdate)}
+              className={`w-12 h-6 rounded-full transition-colors relative ${autoUpdate ? 'bg-indigo-600' : 'bg-gray-300'}`}
+            >
+              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${autoUpdate ? 'left-7' : 'left-1'}`}></div>
+            </button>
+          </div>
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="flex justify-end pt-4">
+          <button 
+            onClick={handleSave}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition-all hover:scale-105"
+          >
+            <Save size={20} />
+            {saved ? 'Saved!' : 'Save Configuration'}
+          </button>
+        </motion.div>
 
       </div>
     </motion.div>
