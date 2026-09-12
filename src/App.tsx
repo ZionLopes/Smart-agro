@@ -9,6 +9,8 @@ import Analytics from './pages/Analytics';
 import SettingsPage from './pages/Settings';
 import Irrigation from './pages/Irrigation';
 import AIInsights from './pages/AIInsights';
+import Login from './pages/Login';
+import AIChat from './components/AIChat';
 
 function Sidebar() {
   const location = useLocation();
@@ -84,6 +86,11 @@ function AnimatedRoutes() {
 
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  if (!isAuthenticated) {
+    return <Login onLogin={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <Router>
@@ -111,6 +118,8 @@ export default function App() {
         <main className="flex-1 h-screen overflow-y-auto bg-transparent pt-16 md:pt-0 z-10 relative">
           <AnimatedRoutes />
         </main>
+        
+        <AIChat />
       </div>
     </Router>
   );

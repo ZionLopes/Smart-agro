@@ -7,6 +7,9 @@ export interface SensorData {
   airTemp: number;
   humidity: number;
   pH: number;
+  windSpeed: number;
+  solarRadiation: number;
+  leafWetness: number;
 }
 
 interface DataContextType {
@@ -32,6 +35,9 @@ const generateInitialData = (): SensorData[] => {
       airTemp: 18 + Math.random() * 15,
       humidity: 40 + Math.random() * 30,
       pH: 6.0 + Math.random() * 1.5,
+      windSpeed: 5 + Math.random() * 15,
+      solarRadiation: 200 + Math.random() * 800,
+      leafWetness: Math.random() * 100,
     });
   }
   return data;
@@ -52,14 +58,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const now = new Date();
         const last = prevData[prevData.length - 1];
         
-        // Add some random walk to make it look realistic
         let newMoisture = last.soilMoisture + (Math.random() - 0.5) * 5;
-        
-        // If valve is open, moisture goes up rapidly
         if (valveOpen) {
           newMoisture += 5;
         }
-        
         newMoisture = Math.max(0, Math.min(100, newMoisture));
 
         newData.push({
@@ -69,6 +71,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
           airTemp: Math.max(10, Math.min(45, last.airTemp + (Math.random() - 0.5) * 2)),
           humidity: Math.max(20, Math.min(100, last.humidity + (Math.random() - 0.5) * 4)),
           pH: Math.max(4, Math.min(9, last.pH + (Math.random() - 0.5) * 0.1)),
+          windSpeed: Math.max(0, Math.min(50, last.windSpeed + (Math.random() - 0.5) * 3)),
+          solarRadiation: Math.max(0, Math.min(1200, last.solarRadiation + (Math.random() - 0.5) * 50)),
+          leafWetness: Math.max(0, Math.min(100, last.leafWetness + (Math.random() - 0.5) * 10)),
         });
         return newData;
       });

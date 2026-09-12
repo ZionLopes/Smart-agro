@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../context/DataContext';
-import { Droplet, ThermometerSun, Thermometer, Wind, Beaker, AlertTriangle } from 'lucide-react';
+import { Droplet, ThermometerSun, Thermometer, Wind, Beaker, AlertTriangle, Sun, CloudRain } from 'lucide-react';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -57,15 +57,17 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="Soil Moisture" value={`${currentData.soilMoisture.toFixed(1)}%`} icon={<Droplet size={32} />} color="from-blue-400 to-blue-600" alert={isAlert} />
         <StatCard title="Soil Temp" value={`${currentData.soilTemp.toFixed(1)}°C`} icon={<Thermometer size={32} />} color="from-orange-400 to-orange-600" />
         <StatCard title="Air Temp" value={`${currentData.airTemp.toFixed(1)}°C`} icon={<ThermometerSun size={32} />} color="from-red-400 to-red-600" />
         <StatCard title="Humidity" value={`${currentData.humidity.toFixed(1)}%`} icon={<Wind size={32} />} color="from-cyan-400 to-cyan-600" />
         <StatCard title="Soil pH" value={`${currentData.pH.toFixed(2)}`} icon={<Beaker size={32} />} color="from-purple-400 to-purple-600" />
+        <StatCard title="Solar Rad" value={`${currentData.solarRadiation.toFixed(0)} W/m²`} icon={<Sun size={32} />} color="from-yellow-400 to-amber-500" />
+        <StatCard title="Leaf Wetness" value={`${currentData.leafWetness.toFixed(0)}%`} icon={<CloudRain size={32} />} color="from-indigo-400 to-indigo-600" />
         
         {/* Placeholder for camera or drone view */}
-        <motion.div variants={itemVariants} className="bg-gray-900 rounded-3xl overflow-hidden relative shadow-2xl group">
+        <motion.div variants={itemVariants} className="bg-gray-900 rounded-3xl overflow-hidden relative shadow-2xl group lg:col-span-1">
            <img src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=2070&auto=format&fit=crop" alt="Farm field" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
            <div className="absolute inset-0 p-6 flex flex-col justify-between">
              <div className="flex justify-between items-center">
@@ -83,8 +85,6 @@ export default function Dashboard() {
     </motion.div>
   );
 }
-
-import { AnimatePresence } from 'framer-motion';
 
 function StatCard({ title, value, icon, color, alert }: { title: string, value: string, icon: React.ReactNode, color: string, alert?: boolean }) {
   return (
