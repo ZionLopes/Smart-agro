@@ -24,6 +24,9 @@ export default function Dashboard() {
   const isAlert = currentData.soilMoisture < moistureThreshold;
   const isTempAlert = currentData.airTemp > 35;
   const isHumidityAlert = currentData.humidity < 30;
+  const isPhLowAlert = currentData.pH < 5.5;
+  const isPhHighAlert = currentData.pH > 7.5;
+  const isSolarAlert = currentData.solarRadiation > 1000;
 
   return (
     <motion.div 
@@ -39,7 +42,7 @@ export default function Dashboard() {
       </motion.div>
 
       <AnimatePresence>
-        {(isAlert || isTempAlert || isHumidityAlert) && (
+        {(isAlert || isTempAlert || isHumidityAlert || isPhLowAlert || isPhHighAlert || isSolarAlert) && (
           <motion.div 
             initial={{ opacity: 0, height: 0, mb: 0 }}
             animate={{ opacity: 1, height: 'auto', mb: 24 }}
@@ -79,6 +82,28 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+            {(isPhLowAlert || isPhHighAlert) && (
+              <div className="bg-gradient-to-r from-purple-500 to-fuchsia-600 rounded-2xl shadow-xl shadow-purple-500/20 p-6 flex items-center text-white">
+                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 1 }}>
+                  <Beaker className="mr-4 h-8 w-8" />
+                </motion.div>
+                <div>
+                  <h3 className="text-lg font-bold">Alert: Abnormal Soil pH</h3>
+                  <p className="opacity-90">Current pH is {currentData.pH.toFixed(2)}. Optimal range is 5.5 - 7.5. Adjust fertilization.</p>
+                </div>
+              </div>
+            )}
+            {isSolarAlert && (
+              <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-2xl shadow-xl shadow-amber-500/20 p-6 flex items-center text-white">
+                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 1 }}>
+                  <Sun className="mr-4 h-8 w-8" />
+                </motion.div>
+                <div>
+                  <h3 className="text-lg font-bold">Warning: Extreme UV/Solar Radiation</h3>
+                  <p className="opacity-90">Solar radiation is very high ({currentData.solarRadiation.toFixed(0)} W/m²). Ensure crops have adequate hydration.</p>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -88,8 +113,8 @@ export default function Dashboard() {
         <StatCard title="Soil Temp" value={`${currentData.soilTemp.toFixed(1)}°C`} icon={<Thermometer size={32} />} color="from-orange-400 to-orange-600" />
         <StatCard title="Air Temp" value={`${currentData.airTemp.toFixed(1)}°C`} icon={<ThermometerSun size={32} />} color="from-red-400 to-red-600" alert={isTempAlert} />
         <StatCard title="Humidity" value={`${currentData.humidity.toFixed(1)}%`} icon={<Wind size={32} />} color="from-cyan-400 to-cyan-600" alert={isHumidityAlert} />
-        <StatCard title="Soil pH" value={`${currentData.pH.toFixed(2)}`} icon={<Beaker size={32} />} color="from-purple-400 to-purple-600" />
-        <StatCard title="Solar Rad" value={`${currentData.solarRadiation.toFixed(0)} W/m²`} icon={<Sun size={32} />} color="from-yellow-400 to-amber-500" />
+        <StatCard title="Soil pH" value={`${currentData.pH.toFixed(2)}`} icon={<Beaker size={32} />} color="from-purple-400 to-purple-600" alert={isPhLowAlert || isPhHighAlert} />
+        <StatCard title="Solar Rad" value={`${currentData.solarRadiation.toFixed(0)} W/m²`} icon={<Sun size={32} />} color="from-yellow-400 to-amber-500" alert={isSolarAlert} />
         <StatCard title="Leaf Wetness" value={`${currentData.leafWetness.toFixed(0)}%`} icon={<CloudRain size={32} />} color="from-indigo-400 to-indigo-600" />
         
         
@@ -118,11 +143,18 @@ function StatCard({ title, value, icon, color, alert }: { title: string, value: 
     <motion.div 
       variants={itemVariants}
       whileHover={{ scale: 1.03, y: -5 }}
-      className={`relative overflow-hidden bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/50 p-6 border ${alert ? 'border-red-400' : 'border-white/50'}`}
+      className={`group relative overflow-hidden bg-white/80 backdrop-blur-2xl rounded-3xl p-6 border transition-all duration-300 ${alert ? 'border-red-400 shadow-red-500/20 shadow-2xl' : 'border-white/50 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:shadow-indigo-500/10'}`}
     >
-      <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full bg-gradient-to-br ${color} opacity-10 blur-2xl`}></div>
-      <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-2xl bg-gradient-to-br ${color} text-white shadow-lg`}>
+      {alert && (
+        <motion.div 
+          animate={{ opacity: [0, 0.2, 0] }} 
+          transition={{ repeat: Infinity, duration: 2 }}
+          className="absolute inset-0 bg-red-500 pointer-events-none"
+        />
+      )}
+      <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full bg-gradient-to-br ${color} opacity-10 blur-2xl group-hover:opacity-30 transition-opacity duration-500`}></div>
+      <div className="flex justify-between items-start mb-4 relative z-10">
+        <div className={`p-3 rounded-2xl bg-gradient-to-br ${color} text-white shadow-lg group-hover:shadow-xl transition-shadow duration-300`}>
           {icon}
         </div>
         {alert && (
@@ -132,10 +164,8 @@ function StatCard({ title, value, icon, color, alert }: { title: string, value: 
           </span>
         )}
       </div>
-      <div>
-        <h3 className="text-gray-500 font-medium">{title}</h3>
-        <p className="text-4xl font-extrabold text-gray-800 mt-1">{value}</p>
-      </div>
+      <h3 className="text-gray-500 font-medium text-sm tracking-wide relative z-10">{title}</h3>
+      <p className={`text-3xl font-extrabold mt-1 relative z-10 ${alert ? 'text-red-500' : 'text-gray-900'}`}>{value}</p>
     </motion.div>
   );
 }
