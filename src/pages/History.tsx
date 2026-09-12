@@ -23,7 +23,7 @@ export default function History() {
     
     // Rows
     const rows = data.map(d => [
-      d.timestamp.toISOString(),
+      d.time,
       d.soilMoisture.toFixed(2),
       d.soilTemp.toFixed(2),
       d.airTemp.toFixed(2),
@@ -96,7 +96,7 @@ export default function History() {
               {data.slice().reverse().map((row, index) => (
                 <tr key={index} className="hover:bg-blue-50/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
-                    {row.timestamp.toLocaleTimeString()}
+                    {row.time}
                   </td>
                   <td className="px-6 py-4">{row.soilMoisture.toFixed(1)}%</td>
                   <td className="px-6 py-4">{row.soilTemp.toFixed(1)}°C</td>
