@@ -52,7 +52,7 @@ export default function AIInsights() {
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [selectedCrop, currentData]);
+  }, [selectedCrop]); // Removed currentData to prevent infinite reloading loops
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="p-8 h-full flex flex-col">
