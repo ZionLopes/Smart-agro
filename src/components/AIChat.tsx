@@ -7,11 +7,11 @@ import ReactMarkdown from 'react-markdown';
 export default function AIChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string }[]>([
-    { role: 'ai', text: 'Hello! I am your AI Farm Assistant powered by Gemini. \n\nI can analyze telemetry data or give you actionable agricultural insights. Try asking:\n- "Give me a full farm report"\n- "Is the soil pH normal?"\n- "Should I irrigate now?"' }
+    { role: 'ai', text: 'Hello! I am your AI Farm Assistant powered by Gemini. \n\nI can analyze telemetry data, historical trends, or give you actionable agricultural insights. Try asking:\n- "Give me a full farm report"\n- "What are the historical trends?"\n- "Should I irrigate now?"' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const { currentData, moistureThreshold } = useData();
+  const { currentData, moistureThreshold, data } = useData();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,8 +52,18 @@ export default function AIChat() {
         } else {
           aiResponse = `✅ **No Irrigation Needed**\nSoil moisture is high (${currentData.soilMoisture.toFixed(1)}%). Irrigating now could lead to waterlogging, root rot, and wasted resources. Wait until moisture drops closer to ${moistureThreshold}%.`;
         }
+      } else if (lowerInput.includes('history') || lowerInput.includes('past') || lowerInput.includes('trend') || lowerInput.includes('maximum') || lowerInput.includes('minimum')) {
+        if (data.length < 2) {
+          aiResponse = "I don't have enough historical data yet to determine trends. Please wait a few moments for the telemetry logs to populate.";
+        } else {
+          const maxTemp = Math.max(...data.map(d => d.airTemp));
+          const minMoisture = Math.min(...data.map(d => d.soilMoisture));
+          const avgHum = data.reduce((acc, curr) => acc + curr.humidity, 0) / data.length;
+          
+          aiResponse = `### 📈 Historical Trend Analysis\n\nBased on your recent session data:\n- **Maximum Air Temperature**: ${maxTemp.toFixed(1)}°C\n- **Minimum Soil Moisture**: ${minMoisture.toFixed(1)}%\n- **Average Humidity**: ${avgHum.toFixed(1)}%\n\nThe data indicates a stable environment, but watch out if that maximum temperature spikes further. You can export the full dataset in the **History & Export** tab.`;
+        }
       } else {
-        aiResponse = "That's an interesting question. In smart agriculture, leveraging AI to analyze LoRaWAN sensor networks allows for precise resource management. \n\nWould you like me to analyze your specific **soil pH**, **irrigation needs**, or generate a **farm report**?";
+        aiResponse = "That's an interesting question. In smart agriculture, leveraging AI to analyze LoRaWAN sensor networks allows for precise resource management. \n\nWould you like me to analyze your specific **soil pH**, **irrigation needs**, generate a **farm report**, or analyze **historical trends**?";
       }
 
       setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);

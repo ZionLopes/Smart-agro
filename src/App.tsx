@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutDashboard, LineChart, Settings, Droplet, Menu, Brain } from 'lucide-react';
+import { LayoutDashboard, LineChart, Settings, Droplet, Menu, Brain, History as HistoryIcon } from 'lucide-react';
 import { useState } from 'react';
+import { DataProvider } from './context/DataContext';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -10,6 +11,7 @@ import SettingsPage from './pages/Settings';
 import Irrigation from './pages/Irrigation';
 import AIInsights from './pages/AIInsights';
 import Login from './pages/Login';
+import History from './pages/History';
 import AIChat from './components/AIChat';
 import { supabase } from './lib/supabase';
 
@@ -18,6 +20,7 @@ function Sidebar({ onLogout }: { onLogout: () => void }) {
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/history', label: 'History & Export', icon: HistoryIcon },
     { path: '/analytics', label: 'Analytics', icon: LineChart },
     { path: '/irrigation', label: 'Irrigation Control', icon: Droplet },
     { path: '/ai-insights', label: 'AI Insights', icon: Brain },
@@ -70,6 +73,7 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/history" element={<History />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/irrigation" element={<Irrigation />} />
         <Route path="/ai-insights" element={<AIInsights />} />
