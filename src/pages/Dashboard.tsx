@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../context/DataContext';
 import { Droplet, ThermometerSun, Thermometer, Wind, Beaker, AlertTriangle, Sun, CloudRain, Cloud } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -144,43 +145,63 @@ export default function Dashboard() {
         <StatCard title="Leaf Wetness" value={`${currentData.leafWetness.toFixed(0)}%`} icon={<CloudRain size={32} />} color="from-indigo-400 to-indigo-600" />
         
         
-        {/* Placeholder for camera or drone view */}
-        <motion.div variants={itemVariants} className="bg-gray-900 rounded-3xl overflow-hidden relative shadow-2xl group lg:col-span-2">
-           <img src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=2070&auto=format&fit=crop" alt="Farm field" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
-           <div className="absolute inset-0 p-6 flex flex-col justify-between">
-             <div className="flex justify-between items-center">
-               <span className="bg-green-500/80 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Live Camera</span>
-               <div className="w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
-             </div>
-             <div>
-               <h3 className="text-white font-bold text-xl">Sector 4</h3>
-               <p className="text-gray-300 text-sm">Last motion detected 5m ago</p>
-             </div>
-           </div>
-        </motion.div>
-
-        {/* Weather Forecast Widget */}
-        <motion.div variants={itemVariants} className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-3xl shadow-xl shadow-cyan-200/50 p-6 text-white lg:col-span-2 flex flex-col justify-between">
+        {/* Advanced Weather Forecast Chart Widget */}
+        <motion.div variants={itemVariants} className="bg-gradient-to-br from-blue-600 to-cyan-700 rounded-3xl shadow-xl shadow-cyan-200/50 p-6 text-white lg:col-span-4 flex flex-col md:flex-row gap-8">
           {!weather ? (
-            <div className="flex-1 flex items-center justify-center animate-pulse">Loading live weather for your coordinates...</div>
+            <div className="flex-1 flex items-center justify-center animate-pulse">Loading live weather and forecasting model...</div>
           ) : (
             <>
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg opacity-90">Forecast (Local)</h3>
-                  <p className="text-4xl font-extrabold mt-1">{weather.current_weather.temperature}°C</p>
-                  <p className="text-sm opacity-90 mt-1 capitalize">{weather.current_weather.windspeed} km/h Wind</p>
-                </div>
-                {weather.current_weather.weathercode > 50 ? <CloudRain size={48} className="text-white opacity-90" /> : <Sun size={48} className="text-white opacity-90" />}
-              </div>
-              <div className="mt-6 grid grid-cols-4 gap-2 border-t border-white/20 pt-4">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="text-center">
-                    <p className="text-xs opacity-80 mb-1">{new Date(weather.daily.time[i]).toLocaleDateString('en-US', { weekday: 'short' })}</p>
-                    {weather.daily.weathercode[i] > 50 ? <CloudRain size={20} className="mx-auto my-1" /> : (weather.daily.weathercode[i] > 2 ? <Cloud size={20} className="mx-auto my-1" /> : <Sun size={20} className="mx-auto my-1" />)}
-                    <p className="font-bold text-sm mt-1">{Math.round(weather.daily.temperature_2m_max[i])}°</p>
+              {/* Left Side: Current & Grid */}
+              <div className="flex flex-col justify-between min-w-[250px]">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-lg opacity-90">Local Forecast</h3>
+                    <p className="text-5xl font-extrabold mt-2">{weather.current_weather.temperature}°C</p>
+                    <p className="text-sm opacity-90 mt-1 capitalize">{weather.current_weather.windspeed} km/h Wind</p>
                   </div>
-                ))}
+                  {weather.current_weather.weathercode > 50 ? <CloudRain size={56} className="text-white opacity-90" /> : <Sun size={56} className="text-white opacity-90" />}
+                </div>
+                <div className="mt-8 grid grid-cols-4 gap-2 border-t border-white/20 pt-4">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="text-center">
+                      <p className="text-xs opacity-80 mb-1">{new Date(weather.daily.time[i]).toLocaleDateString('en-US', { weekday: 'short' })}</p>
+                      {weather.daily.weathercode[i] > 50 ? <CloudRain size={20} className="mx-auto my-1" /> : (weather.daily.weathercode[i] > 2 ? <Cloud size={20} className="mx-auto my-1" /> : <Sun size={20} className="mx-auto my-1" />)}
+                      <p className="font-bold text-sm mt-1">{Math.round(weather.daily.temperature_2m_max[i])}°</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Side: 7-Day Chart */}
+              <div className="flex-1 border-t md:border-t-0 md:border-l border-white/20 pt-6 md:pt-0 md:pl-8 flex flex-col">
+                <h3 className="font-bold text-sm opacity-90 mb-4 uppercase tracking-wider">7-Day Temperature Trend</h3>
+                <div className="flex-1 min-h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart 
+                      data={weather.daily.time.map((t: string, i: number) => ({
+                        day: new Date(t).toLocaleDateString('en-US', { weekday: 'short' }),
+                        maxTemp: weather.daily.temperature_2m_max[i],
+                        minTemp: weather.daily.temperature_2m_min[i]
+                      }))}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorMax" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ffffff" stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="day" stroke="rgba(255,255,255,0.5)" tick={{fill: 'rgba(255,255,255,0.8)', fontSize: 12}} axisLine={false} tickLine={false} />
+                      <YAxis stroke="rgba(255,255,255,0.5)" tick={{fill: 'rgba(255,255,255,0.8)', fontSize: 12}} axisLine={false} tickLine={false} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderRadius: '12px', border: 'none', color: '#fff' }}
+                        itemStyle={{ color: '#fff' }}
+                      />
+                      <Area type="monotone" dataKey="maxTemp" name="Max Temp °C" stroke="#ffffff" strokeWidth={3} fillOpacity={1} fill="url(#colorMax)" />
+                      <Area type="monotone" dataKey="minTemp" name="Min Temp °C" stroke="rgba(255,255,255,0.5)" strokeWidth={2} strokeDasharray="5 5" fill="none" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </>
           )}

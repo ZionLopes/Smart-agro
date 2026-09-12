@@ -1,12 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutDashboard, LineChart, Settings, Droplet, Menu, Brain, History as HistoryIcon, Map as MapIcon } from 'lucide-react';
+import { LayoutDashboard, LineChart, Settings, Droplet, Menu, Brain, History as HistoryIcon, Map as MapIcon, Camera } from 'lucide-react';
 import { useState } from 'react';
 import { DataProvider } from './context/DataContext';
 
 // Pages
 import Dashboard from './pages/Dashboard';
 import FarmMap from './pages/FarmMap';
+import Cameras from './pages/Cameras';
 import Analytics from './pages/Analytics';
 import SettingsPage from './pages/Settings';
 import Irrigation from './pages/Irrigation';
@@ -21,6 +22,7 @@ function Sidebar({ onLogout }: { onLogout: () => void }) {
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/cameras', label: 'Live Surveillance', icon: Camera },
     { path: '/map', label: 'Farm Map (GIS)', icon: MapIcon },
     { path: '/history', label: 'History & Export', icon: HistoryIcon },
     { path: '/analytics', label: 'Analytics', icon: LineChart },
@@ -75,6 +77,7 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/cameras" element={<Cameras />} />
         <Route path="/map" element={<FarmMap />} />
         <Route path="/history" element={<History />} />
         <Route path="/analytics" element={<Analytics />} />
