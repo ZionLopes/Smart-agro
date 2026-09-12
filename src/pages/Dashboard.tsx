@@ -17,7 +17,7 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
-  const { currentData, moistureThreshold } = useData();
+  const { currentData, moistureThreshold, dbConnected } = useData();
 
   if (!currentData) return <div className="p-8">Loading...</div>;
 
@@ -36,9 +36,18 @@ export default function Dashboard() {
       exit="exit"
       className="p-8"
     >
-      <motion.div variants={itemVariants} className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Farm Overview</h1>
-        <p className="text-gray-500 mt-1">Real-time node telemetry</p>
+      <motion.div variants={itemVariants} className="mb-8 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Farm Overview</h1>
+          <p className="text-gray-500 mt-1">Real-time LoRaWAN sensor data</p>
+        </div>
+        <div className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 ${dbConnected ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-yellow-100 text-yellow-700 border border-yellow-200'}`}>
+          <span className="relative flex h-3 w-3">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${dbConnected ? 'bg-green-400' : 'bg-yellow-400'}`}></span>
+            <span className={`relative inline-flex rounded-full h-3 w-3 ${dbConnected ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+          </span>
+          {dbConnected ? 'Supabase Live Sync' : 'Local Simulation'}
+        </div>
       </motion.div>
 
       <AnimatePresence>
@@ -119,7 +128,7 @@ export default function Dashboard() {
         
         
         {/* Placeholder for camera or drone view */}
-        <motion.div variants={itemVariants} className="bg-gray-900 rounded-3xl overflow-hidden relative shadow-2xl group lg:col-span-1">
+        <motion.div variants={itemVariants} className="bg-gray-900 rounded-3xl overflow-hidden relative shadow-2xl group lg:col-span-2">
            <img src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=2070&auto=format&fit=crop" alt="Farm field" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
            <div className="absolute inset-0 p-6 flex flex-col justify-between">
              <div className="flex justify-between items-center">
@@ -131,6 +140,40 @@ export default function Dashboard() {
                <p className="text-gray-300 text-sm">Last motion detected 5m ago</p>
              </div>
            </div>
+        </motion.div>
+
+        {/* Weather Forecast Widget */}
+        <motion.div variants={itemVariants} className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-3xl shadow-xl shadow-cyan-200/50 p-6 text-white lg:col-span-2 flex flex-col justify-between">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-bold text-lg opacity-90">Forecast</h3>
+              <p className="text-3xl font-extrabold mt-1">24°C</p>
+              <p className="text-sm opacity-80 mt-1">Partly Cloudy</p>
+            </div>
+            <CloudRain size={40} className="text-white opacity-90" />
+          </div>
+          <div className="mt-6 flex justify-between items-end border-t border-white/20 pt-4">
+            <div className="text-center">
+              <p className="text-xs opacity-70">Tomorrow</p>
+              <Sun size={20} className="mx-auto my-1" />
+              <p className="font-bold text-sm">26°</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs opacity-70">Wed</p>
+              <Sun size={20} className="mx-auto my-1" />
+              <p className="font-bold text-sm">28°</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs opacity-70">Thu</p>
+              <CloudRain size={20} className="mx-auto my-1" />
+              <p className="font-bold text-sm">22°</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs opacity-70">Fri</p>
+              <Wind size={20} className="mx-auto my-1" />
+              <p className="font-bold text-sm">23°</p>
+            </div>
+          </div>
         </motion.div>
       </div>
 
