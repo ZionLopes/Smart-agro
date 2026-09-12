@@ -64,18 +64,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Request Geolocation on mount
   useEffect(() => {
     if (navigator.geolocation) {
+      const timeoutId = setTimeout(() => {
+        setUserLocation(prev => prev ? prev : { lat: 36.7783, lng: -119.4179 });
+      }, 3000); // 3 second timeout if user ignores prompt
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          clearTimeout(timeoutId);
           setUserLocation({
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
         },
         (error) => {
+          clearTimeout(timeoutId);
           console.error("Error getting location:", error);
-          // Fallback to a default agricultural area if denied
           setUserLocation({ lat: 36.7783, lng: -119.4179 }); 
-        }
+        },
+        { timeout: 5000 }
       );
     } else {
       setUserLocation({ lat: 36.7783, lng: -119.4179 });

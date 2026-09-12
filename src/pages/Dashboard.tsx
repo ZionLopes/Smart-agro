@@ -145,8 +145,25 @@ export default function Dashboard() {
         <StatCard title="Leaf Wetness" value={`${currentData.leafWetness.toFixed(0)}%`} icon={<CloudRain size={32} />} color="from-indigo-400 to-indigo-600" />
         
         
+        {/* Live Camera Widget */}
+        <motion.div variants={itemVariants} className="bg-gray-900 rounded-3xl overflow-hidden relative shadow-2xl group lg:col-span-1 min-h-[300px]">
+           <img src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=2070&auto=format&fit=crop" alt="Farm field" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+           <div className="absolute inset-0 p-6 flex flex-col justify-between">
+             <div className="flex justify-between items-center">
+               <span className="bg-red-500/80 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-2">
+                 <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                 Live Camera
+               </span>
+             </div>
+             <div>
+               <h3 className="text-white font-bold text-xl">Sector 4</h3>
+               <p className="text-gray-300 text-sm">North Field</p>
+             </div>
+           </div>
+        </motion.div>
+
         {/* Advanced Weather Forecast Chart Widget */}
-        <motion.div variants={itemVariants} className="bg-gradient-to-br from-blue-600 to-cyan-700 rounded-3xl shadow-xl shadow-cyan-200/50 p-6 text-white lg:col-span-4 flex flex-col md:flex-row gap-8">
+        <motion.div variants={itemVariants} className="bg-gradient-to-br from-blue-600 to-cyan-700 rounded-3xl shadow-xl shadow-cyan-200/50 p-6 text-white lg:col-span-3 flex flex-col md:flex-row gap-8">
           {!weather ? (
             <div className="flex-1 flex items-center justify-center animate-pulse">Loading live weather and forecasting model...</div>
           ) : (
@@ -155,7 +172,8 @@ export default function Dashboard() {
               <div className="flex flex-col justify-between min-w-[250px]">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-bold text-lg opacity-90">Local Forecast</h3>
+                    <h3 className="font-bold text-lg opacity-90">Forecast (Local)</h3>
+                    <p className="text-xs opacity-70 mb-2">GPS: {userLocation?.lat.toFixed(2)}, {userLocation?.lng.toFixed(2)}</p>
                     <p className="text-5xl font-extrabold mt-2">{weather.current_weather.temperature}°C</p>
                     <p className="text-sm opacity-90 mt-1 capitalize">{weather.current_weather.windspeed} km/h Wind</p>
                   </div>
