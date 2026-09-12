@@ -38,57 +38,6 @@ export default function Tasks() {
     setNewTaskTitle('');
   };
 
-  const Column = ({ title, status, icon: Icon, colorClass }: { title: string, status: Task['status'], icon: any, colorClass: string }) => {
-    const columnTasks = tasks.filter(t => t.status === status);
-    
-    return (
-      <div className="flex-1 bg-gray-50 rounded-2xl p-4 flex flex-col min-h-[500px]">
-        <h3 className={`font-bold text-lg mb-4 flex items-center gap-2 ${colorClass}`}>
-          <Icon size={20} />
-          {title} ({columnTasks.length})
-        </h3>
-        <div className="flex flex-col gap-3 flex-1">
-          <AnimatePresence>
-            {columnTasks.map(task => (
-              <motion.div 
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                key={task.id} 
-                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3 relative group"
-              >
-                <div className="flex justify-between items-start pr-6">
-                  <span className="font-bold text-gray-800 text-sm">{task.title}</span>
-                  <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md ${
-                    task.priority === 'high' ? 'bg-red-100 text-red-700' : 
-                    task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
-                  }`}>
-                    {task.priority}
-                  </span>
-                </div>
-                
-                <button 
-                  onClick={() => handleDelete(task.id)}
-                  className="absolute top-3 right-3 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove Task"
-                >
-                  <Trash2 size={16} />
-                </button>
-
-                <div className="flex gap-2 mt-auto pt-2 border-t border-gray-50">
-                  {status !== 'todo' && <button onClick={() => handleStatusChange(task.id, 'todo')} className="text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">Move to To-Do</button>}
-                  {status !== 'in-progress' && <button onClick={() => handleStatusChange(task.id, 'in-progress')} className="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded">Start</button>}
-                  {status !== 'done' && <button onClick={() => handleStatusChange(task.id, 'done')} className="text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 px-2 py-1 rounded">Complete</button>}
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="p-8 h-full overflow-y-auto">
       <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
@@ -126,9 +75,81 @@ export default function Tasks() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        <Column title="To Do" status="todo" icon={AlertCircle} colorClass="text-gray-600" />
-        <Column title="In Progress" status="in-progress" icon={Clock} colorClass="text-blue-600" />
-        <Column title="Completed" status="done" icon={CheckCircle} colorClass="text-green-600" />
+        
+        {/* TO DO COLUMN */}
+        <div className="flex-1 bg-gray-50 rounded-2xl p-4 flex flex-col min-h-[500px]">
+          <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-600">
+            <AlertCircle size={20} />
+            To Do ({tasks.filter(t => t.status === 'todo').length})
+          </h3>
+          <div className="flex flex-col gap-3 flex-1">
+            <AnimatePresence>
+              {tasks.filter(t => t.status === 'todo').map(task => (
+                <motion.div layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} key={task.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3 relative group">
+                  <div className="flex justify-between items-start pr-6">
+                    <span className="font-bold text-gray-800 text-sm">{task.title}</span>
+                    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md ${task.priority === 'high' ? 'bg-red-100 text-red-700' : task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{task.priority}</span>
+                  </div>
+                  <button onClick={() => handleDelete(task.id)} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" title="Remove Task"><Trash2 size={16} /></button>
+                  <div className="flex gap-2 mt-auto pt-2 border-t border-gray-50">
+                    <button onClick={() => handleStatusChange(task.id, 'in-progress')} className="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded">Start</button>
+                    <button onClick={() => handleStatusChange(task.id, 'done')} className="text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 px-2 py-1 rounded">Complete</button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* IN PROGRESS COLUMN */}
+        <div className="flex-1 bg-gray-50 rounded-2xl p-4 flex flex-col min-h-[500px]">
+          <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-blue-600">
+            <Clock size={20} />
+            In Progress ({tasks.filter(t => t.status === 'in-progress').length})
+          </h3>
+          <div className="flex flex-col gap-3 flex-1">
+            <AnimatePresence>
+              {tasks.filter(t => t.status === 'in-progress').map(task => (
+                <motion.div layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} key={task.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3 relative group">
+                  <div className="flex justify-between items-start pr-6">
+                    <span className="font-bold text-gray-800 text-sm">{task.title}</span>
+                    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md ${task.priority === 'high' ? 'bg-red-100 text-red-700' : task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{task.priority}</span>
+                  </div>
+                  <button onClick={() => handleDelete(task.id)} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" title="Remove Task"><Trash2 size={16} /></button>
+                  <div className="flex gap-2 mt-auto pt-2 border-t border-gray-50">
+                    <button onClick={() => handleStatusChange(task.id, 'todo')} className="text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">Move to To-Do</button>
+                    <button onClick={() => handleStatusChange(task.id, 'done')} className="text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 px-2 py-1 rounded">Complete</button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* DONE COLUMN */}
+        <div className="flex-1 bg-gray-50 rounded-2xl p-4 flex flex-col min-h-[500px]">
+          <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-green-600">
+            <CheckCircle size={20} />
+            Completed ({tasks.filter(t => t.status === 'done').length})
+          </h3>
+          <div className="flex flex-col gap-3 flex-1">
+            <AnimatePresence>
+              {tasks.filter(t => t.status === 'done').map(task => (
+                <motion.div layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} key={task.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3 relative group">
+                  <div className="flex justify-between items-start pr-6">
+                    <span className="font-bold text-gray-800 text-sm">{task.title}</span>
+                    <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md ${task.priority === 'high' ? 'bg-red-100 text-red-700' : task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{task.priority}</span>
+                  </div>
+                  <button onClick={() => handleDelete(task.id)} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" title="Remove Task"><Trash2 size={16} /></button>
+                  <div className="flex gap-2 mt-auto pt-2 border-t border-gray-50">
+                    <button onClick={() => handleStatusChange(task.id, 'todo')} className="text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">Move to To-Do</button>
+                    <button onClick={() => handleStatusChange(task.id, 'in-progress')} className="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded">Restart</button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </motion.div>
   );

@@ -147,7 +147,13 @@ export default function Dashboard() {
         
         {/* Live Camera Widget */}
         <motion.div variants={itemVariants} className="bg-gray-900 rounded-3xl overflow-hidden relative shadow-2xl group lg:col-span-1 min-h-[300px]">
-           <iframe src="https://www.youtube.com/embed/YpXq4j14T3Y?autoplay=1&mute=1&controls=0&loop=1&playlist=YpXq4j14T3Y" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none" allow="autoplay; encrypted-media" frameBorder="0" />
+           <motion.img 
+             src="https://images.unsplash.com/photo-1599427354157-128b9d3b10b0?q=80&w=2070&auto=format&fit=crop" 
+             initial={{ scale: 1.0 }}
+             animate={{ scale: 1.1, x: [-10, 10, -10] }}
+             transition={{ duration: 30, repeat: Infinity, repeatType: "mirror" }}
+             className="w-[110%] h-[110%] -left-[5%] absolute object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500" 
+           />
            <div className="absolute inset-0 p-6 flex flex-col justify-between pointer-events-none">
              <div className="flex justify-between items-center">
                <span className="bg-red-500/80 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-2">

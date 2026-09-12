@@ -12,8 +12,8 @@ const containerVariants = {
 };
 
 const cameras = [
-  { id: 1, name: 'Cam 01 - Tractor Live Feed', type: 'youtube', url: 'https://www.youtube.com/embed/YpXq4j14T3Y?autoplay=1&mute=1&controls=0&loop=1&playlist=YpXq4j14T3Y', status: 'Online', alerts: 0 },
-  { id: 2, name: 'Cam 02 - Field Aerial View', type: 'youtube', url: 'https://www.youtube.com/embed/G6jWnN_39dI?autoplay=1&mute=1&controls=0&loop=1&playlist=G6jWnN_39dI', status: 'Online', alerts: 1 },
+  { id: 1, name: 'Cam 01 - Tractor Live Feed', type: 'image', url: 'https://images.unsplash.com/photo-1599427354157-128b9d3b10b0?q=80&w=2070&auto=format&fit=crop', status: 'Online', alerts: 0 },
+  { id: 2, name: 'Cam 02 - Field Aerial View', type: 'image', url: 'https://images.unsplash.com/photo-1586771107445-d3af9e1e2d4f?q=80&w=2072&auto=format&fit=crop', status: 'Online', alerts: 1 },
   { id: 3, name: 'Cam 03 - Greenhouse Interior', type: 'image', url: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?q=80&w=2069&auto=format&fit=crop', status: 'Online', alerts: 0 },
   { id: 4, name: 'Cam 04 - Drone PTZ View', type: 'image', url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2064&auto=format&fit=crop', status: 'Offline', alerts: 0 },
 ];
@@ -71,31 +71,19 @@ export default function Cameras() {
                 <p>Camera is currently offline.</p>
               </div>
             ) : (
-              <>
-                {activeCam.type === 'youtube' ? (
-                  <iframe
-                    src={activeCam.url}
-                    className={`w-full h-full object-cover transition-all duration-700 pointer-events-none ${nightVision ? 'grayscale sepia-[.3] hue-rotate-[70deg] contrast-150 brightness-75' : ''}`}
-                    allow="autoplay; encrypted-media"
-                    frameBorder="0"
-                  />
-                ) : activeCam.type === 'video' ? (
-                  <video 
-                    src={activeCam.url} 
-                    autoPlay 
-                    loop 
-                    muted 
-                    playsInline
-                    className={`w-full h-full object-cover transition-all duration-700 ${nightVision ? 'grayscale sepia-[.3] hue-rotate-[70deg] contrast-150 brightness-75' : ''}`} 
-                  />
-                ) : (
-                  <img 
-                    src={activeCam.url} 
-                    alt={activeCam.name} 
-                    className={`w-full h-full object-cover transition-all duration-700 ${nightVision ? 'grayscale sepia-[.3] hue-rotate-[70deg] contrast-150 brightness-75' : ''}`} 
-                  />
-                )}
-              </>
+              <motion.img 
+                key={activeCam.url} // Forces remount on change to restart animation
+                src={activeCam.url} 
+                alt={activeCam.name} 
+                initial={{ scale: 1.0 }}
+                animate={{ scale: 1.1, x: [-10, 10, -10], y: [-5, 5, -5] }}
+                transition={{ 
+                  scale: { duration: 20, ease: "linear", repeat: Infinity, repeatType: "reverse" },
+                  x: { duration: 30, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" },
+                  y: { duration: 25, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" }
+                }}
+                className={`w-[110%] h-[110%] -left-[5%] -top-[5%] absolute object-cover transition-all duration-700 ${nightVision ? 'grayscale sepia-[.3] hue-rotate-[70deg] contrast-150 brightness-75' : ''}`} 
+              />
             )}
             
             {/* PTZ Controls overlay */}
