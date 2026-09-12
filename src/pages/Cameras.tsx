@@ -12,9 +12,9 @@ const containerVariants = {
 };
 
 const cameras = [
-  { id: 1, name: 'Cam 01 - Tractor Live Feed', type: 'image', url: 'https://images.unsplash.com/photo-1599427354157-128b9d3b10b0?q=80&w=2070&auto=format&fit=crop', status: 'Online', alerts: 0 },
-  { id: 2, name: 'Cam 02 - Field Aerial View', type: 'image', url: 'https://images.unsplash.com/photo-1586771107445-d3af9e1e2d4f?q=80&w=2072&auto=format&fit=crop', status: 'Online', alerts: 1 },
-  { id: 3, name: 'Cam 03 - Greenhouse Interior', type: 'image', url: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?q=80&w=2069&auto=format&fit=crop', status: 'Online', alerts: 0 },
+  { id: 1, name: 'Cam 01 - Field Sector A', type: 'image', url: 'https://harisharandevgan.wordpress.com/wp-content/uploads/2025/12/crop-farming.png', status: 'Online', alerts: 0 },
+  { id: 2, name: 'Cam 02 - Crop Assessment', type: 'image', url: 'https://harisharandevgan.wordpress.com/wp-content/uploads/2025/12/crop-farming-1.png', status: 'Online', alerts: 1 },
+  { id: 3, name: 'Cam 03 - Cultivation Zone', type: 'image', url: 'https://harisharandevgan.wordpress.com/wp-content/uploads/2025/12/crop-farming-in-india.png', status: 'Online', alerts: 0 },
   { id: 4, name: 'Cam 04 - Drone PTZ View', type: 'image', url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2064&auto=format&fit=crop', status: 'Offline', alerts: 0 },
 ];
 

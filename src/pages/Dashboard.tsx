@@ -148,7 +148,7 @@ export default function Dashboard() {
         {/* Live Camera Widget */}
         <motion.div variants={itemVariants} className="bg-gray-900 rounded-3xl overflow-hidden relative shadow-2xl group lg:col-span-1 min-h-[300px]">
            <motion.img 
-             src="https://images.unsplash.com/photo-1599427354157-128b9d3b10b0?q=80&w=2070&auto=format&fit=crop" 
+             src="https://harisharandevgan.wordpress.com/wp-content/uploads/2025/12/crop-farming.png" 
              initial={{ scale: 1.0 }}
              animate={{ scale: 1.1, x: [-10, 10, -10] }}
              transition={{ duration: 30, repeat: Infinity, repeatType: "mirror" }}
