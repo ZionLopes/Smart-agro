@@ -25,6 +25,8 @@ interface DataContextType {
   selectedCrop: string;
   setSelectedCrop: (crop: string) => void;
   dbConnected: boolean;
+  userLocation: { lat: number; lng: number } | null;
+  setUserLocation: (loc: { lat: number; lng: number } | null) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -57,6 +59,28 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [irrigationMode, setIrrigationMode] = useState<'manual' | 'auto'>('manual');
   const [selectedCrop, setSelectedCrop] = useState('Tomatoes');
   const [dbConnected, setDbConnected] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Request Geolocation on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          // Fallback to a default agricultural area if denied
+          setUserLocation({ lat: 36.7783, lng: -119.4179 }); 
+        }
+      );
+    } else {
+      setUserLocation({ lat: 36.7783, lng: -119.4179 });
+    }
+  }, []);
 
   // Use refs for the simulation loop to always access latest state without re-triggering useEffect
   const stateRef = useRef({ valveOpen, irrigationMode, moistureThreshold });
@@ -205,7 +229,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const currentData = data.length > 0 ? data[data.length - 1] : null;
 
   return (
-    <DataContext.Provider value={{ data, currentData, valveOpen, setValveOpen, moistureThreshold, setMoistureThreshold, irrigationMode, setIrrigationMode, selectedCrop, setSelectedCrop, dbConnected }}>
+    <DataContext.Provider value={{ data, currentData, valveOpen, setValveOpen, moistureThreshold, setMoistureThreshold, irrigationMode, setIrrigationMode, selectedCrop, setSelectedCrop, dbConnected, userLocation, setUserLocation }}>
       {children}
     </DataContext.Provider>
   );

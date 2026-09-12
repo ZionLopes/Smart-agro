@@ -27,10 +27,18 @@ const containerVariants = {
 };
 
 export default function FarmMap() {
-  const { currentData, moistureThreshold } = useData();
+  const { currentData, moistureThreshold, userLocation } = useData();
 
-  // Simulated farm center coordinates
-  const position: [number, number] = [36.7783, -119.4179]; // Central Valley, CA
+  if (!userLocation) {
+    return (
+      <div className="p-8 h-full flex flex-col items-center justify-center text-gray-500">
+        <MapIcon className="h-12 w-12 mb-4 animate-pulse" />
+        <p>Acquiring GPS coordinates for your farm...</p>
+      </div>
+    );
+  }
+
+  const position: [number, number] = [userLocation.lat, userLocation.lng];
 
   const isAlert = currentData ? currentData.soilMoisture < moistureThreshold : false;
   
@@ -107,7 +115,7 @@ export default function FarmMap() {
           />
 
           {/* Secondary Simulated Node (Always Optimal) */}
-          <Marker position={[36.7750, -119.4140]} icon={createCustomIcon(false)}>
+          <Marker position={[position[0] - 0.0033, position[1] + 0.0039]} icon={createCustomIcon(false)}>
             <Popup>
               <div className="p-2">
                 <h3 className="font-bold text-lg border-b pb-1 mb-2 flex items-center gap-2">

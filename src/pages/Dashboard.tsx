@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../context/DataContext';
-import { Droplet, ThermometerSun, Thermometer, Wind, Beaker, AlertTriangle, Sun, CloudRain } from 'lucide-react';
+import { Droplet, ThermometerSun, Thermometer, Wind, Beaker, AlertTriangle, Sun, CloudRain, Cloud } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -17,7 +18,23 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
-  const { currentData, moistureThreshold, dbConnected } = useData();
+  const { currentData, moistureThreshold, dbConnected, userLocation } = useData();
+  const [weather, setWeather] = useState<any>(null);
+
+  useEffect(() => {
+    if (userLocation) {
+      const fetchWeather = async () => {
+        try {
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${userLocation.lat}&longitude=${userLocation.lng}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&timezone=auto`);
+          const data = await res.json();
+          setWeather(data);
+        } catch (err) {
+          console.error("Failed to fetch weather", err);
+        }
+      };
+      fetchWeather();
+    }
+  }, [userLocation]);
 
   if (!currentData) return <div className="p-8">Loading...</div>;
 
@@ -144,36 +161,29 @@ export default function Dashboard() {
 
         {/* Weather Forecast Widget */}
         <motion.div variants={itemVariants} className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-3xl shadow-xl shadow-cyan-200/50 p-6 text-white lg:col-span-2 flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-bold text-lg opacity-90">Forecast</h3>
-              <p className="text-3xl font-extrabold mt-1">24°C</p>
-              <p className="text-sm opacity-80 mt-1">Partly Cloudy</p>
-            </div>
-            <CloudRain size={40} className="text-white opacity-90" />
-          </div>
-          <div className="mt-6 flex justify-between items-end border-t border-white/20 pt-4">
-            <div className="text-center">
-              <p className="text-xs opacity-70">Tomorrow</p>
-              <Sun size={20} className="mx-auto my-1" />
-              <p className="font-bold text-sm">26°</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs opacity-70">Wed</p>
-              <Sun size={20} className="mx-auto my-1" />
-              <p className="font-bold text-sm">28°</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs opacity-70">Thu</p>
-              <CloudRain size={20} className="mx-auto my-1" />
-              <p className="font-bold text-sm">22°</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs opacity-70">Fri</p>
-              <Wind size={20} className="mx-auto my-1" />
-              <p className="font-bold text-sm">23°</p>
-            </div>
-          </div>
+          {!weather ? (
+            <div className="flex-1 flex items-center justify-center animate-pulse">Loading live weather for your coordinates...</div>
+          ) : (
+            <>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-lg opacity-90">Forecast (Local)</h3>
+                  <p className="text-4xl font-extrabold mt-1">{weather.current_weather.temperature}°C</p>
+                  <p className="text-sm opacity-90 mt-1 capitalize">{weather.current_weather.windspeed} km/h Wind</p>
+                </div>
+                {weather.current_weather.weathercode > 50 ? <CloudRain size={48} className="text-white opacity-90" /> : <Sun size={48} className="text-white opacity-90" />}
+              </div>
+              <div className="mt-6 grid grid-cols-4 gap-2 border-t border-white/20 pt-4">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="text-center">
+                    <p className="text-xs opacity-80 mb-1">{new Date(weather.daily.time[i]).toLocaleDateString('en-US', { weekday: 'short' })}</p>
+                    {weather.daily.weathercode[i] > 50 ? <CloudRain size={20} className="mx-auto my-1" /> : (weather.daily.weathercode[i] > 2 ? <Cloud size={20} className="mx-auto my-1" /> : <Sun size={20} className="mx-auto my-1" />)}
+                    <p className="font-bold text-sm mt-1">{Math.round(weather.daily.temperature_2m_max[i])}°</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </motion.div>
       </div>
 
