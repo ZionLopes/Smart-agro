@@ -7,11 +7,11 @@ import ReactMarkdown from 'react-markdown';
 export default function AIChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string }[]>([
-    { role: 'ai', text: 'Hello! I am your AI Farm Assistant powered by Gemini. \n\nI can analyze telemetry data, historical trends, or give you actionable agricultural insights. Try asking:\n- "Give me a full farm report"\n- "What are the historical trends?"\n- "Should I irrigate now?"' }
+    { role: 'ai', text: 'Hello! I am your **AI Farm Chat** Assistant. \n\nI can analyze your live sensor data, review historical trends, and provide expert agricultural advice tailored to your specific crops. How can I help you optimize your yield today?' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const { currentData, moistureThreshold, data } = useData();
+  const { currentData, moistureThreshold, data, selectedCrop, userLocation } = useData();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,39 +31,47 @@ export default function AIChat() {
       
       const lowerInput = userMessage.toLowerCase();
       if (!currentData) {
-        aiResponse = "I am currently unable to fetch the live telemetry data. Please ensure the sensors are connected.";
-      } else if (lowerInput.includes('status') || lowerInput.includes('report') || lowerInput.includes('farm')) {
-        aiResponse = `### 📊 Live Farm Telemetry Report\n\n- **Soil Moisture**: ${currentData.soilMoisture.toFixed(1)}% (Threshold: ${moistureThreshold}%)\n- **Soil Temp**: ${currentData.soilTemp.toFixed(1)}°C\n- **Air Temp**: ${currentData.airTemp.toFixed(1)}°C\n- **Humidity**: ${currentData.humidity.toFixed(1)}%\n- **Soil pH**: ${currentData.pH.toFixed(2)}\n- **Solar Radiation**: ${currentData.solarRadiation.toFixed(0)} W/m²\n\n**AI Recommendation**: ${currentData.soilMoisture < moistureThreshold ? '🚨 Immediate irrigation required to prevent crop stress.' : '✅ All parameters are within optimal ranges for most crops.'}`;
-      } else if (lowerInput.includes('ph') || lowerInput.includes('acid') || lowerInput.includes('alkaline')) {
-        const ph = currentData.pH;
-        if (ph < 5.5) {
-          aiResponse = `Your soil pH is currently **${ph.toFixed(2)}**, which is quite acidic.\n\n**Recommendation:** Consider applying **agricultural lime (calcium carbonate)** to raise the pH. Acidic soil can reduce the availability of essential nutrients like Nitrogen and Phosphorus.`;
-        } else if (ph > 7.5) {
-          aiResponse = `Your soil pH is currently **${ph.toFixed(2)}**, which is alkaline.\n\n**Recommendation:** Consider adding **elemental sulfur or peat moss** to lower the pH. High pH can cause iron deficiency (chlorosis) in your crops.`;
+        aiResponse = "I am currently unable to fetch the live telemetry data. Please ensure your LoRaWAN sensors are connected.";
+      } else if (lowerInput.includes('status') || lowerInput.includes('report') || lowerInput.includes('farm') || lowerInput.includes('summary')) {
+        aiResponse = `### 🌾 Live Farm Report for ${selectedCrop}\n\n` +
+          `**Current Status:**\n` +
+          `- **Soil Moisture**: ${currentData.soilMoisture.toFixed(1)}% (Threshold for ${selectedCrop} is ${moistureThreshold}%)\n` +
+          `- **Air Temperature**: ${currentData.airTemp.toFixed(1)}°C\n` +
+          `- **Soil pH**: ${currentData.pH.toFixed(2)}\n` +
+          `- **Leaf Wetness**: ${currentData.leafWetness.toFixed(0)}%\n\n` +
+          `**AI Assessment:**\n` +
+          `${currentData.soilMoisture < moistureThreshold ? `🚨 **Critical Action Required**: Your ${selectedCrop} crop is currently below the optimal moisture threshold. Immediate irrigation is highly recommended to prevent yield loss.` : `✅ **Optimal**: Moisture levels are currently sufficient for ${selectedCrop}. No immediate irrigation is required.`} ` +
+          `${currentData.pH < 6.0 ? "Additionally, your soil pH is slightly acidic, consider applying agricultural lime." : "Soil pH is within healthy ranges."}`;
+      } else if (lowerInput.includes('history') || lowerInput.includes('trend') || lowerInput.includes('past')) {
+        
+        if (data.length < 5) {
+            aiResponse = "I need more data points to establish a reliable historical trend. Please wait a few moments as data accumulates.";
         } else {
-          aiResponse = `Your soil pH is **${ph.toFixed(2)}**. \n\nThis is the **perfect sweet spot** (5.5 - 7.5) for maximizing nutrient availability for most agricultural crops! No action needed.`;
+            const maxTemp = Math.max(...data.map(d => d.airTemp));
+            const minMoist = Math.min(...data.map(d => d.soilMoisture));
+            const avgPh = data.reduce((acc, curr) => acc + curr.pH, 0) / data.length;
+            
+            aiResponse = `### 📊 Historical Trend Analysis\n\nBased on the last ${data.length} telemetry readings for your ${selectedCrop} crop:\n\n` +
+            `- **Peak Air Temp**: ${maxTemp.toFixed(1)}°C\n` +
+            `- **Lowest Moisture Dip**: ${minMoist.toFixed(1)}%\n` +
+            `- **Average Soil pH**: ${avgPh.toFixed(2)}\n\n` +
+            `**AI Insight**: Over the recorded period, your soil pH has remained relatively stable at ${avgPh.toFixed(2)}. ` +
+            `${minMoist < moistureThreshold ? `However, soil moisture dipped dangerously low (${minMoist.toFixed(1)}%) compared to the ${moistureThreshold}% threshold required for ${selectedCrop}. Ensure your automated irrigation triggers are functioning correctly.` : "Your moisture retention has been excellent, staying above critical thresholds!"}`;
         }
-      } else if (lowerInput.includes('irrigation') || lowerInput.includes('water')) {
-        const diff = currentData.soilMoisture - moistureThreshold;
-        if (diff < 0) {
-          aiResponse = `⚠️ **Critical Action Required**\nSoil moisture (${currentData.soilMoisture.toFixed(1)}%) is below the threshold of ${moistureThreshold}%.\n\nI recommend switching to **AI Auto Mode** in the Irrigation Control panel, or manually opening the valve for at least 45 minutes to restore optimal saturation.`;
-        } else if (diff < 10) {
-          aiResponse = `💧 **Irrigation Planning**\nSoil moisture is currently at ${currentData.soilMoisture.toFixed(1)}%, which is close to your threshold of ${moistureThreshold}%.\n\nWith current solar radiation at ${currentData.solarRadiation.toFixed(0)} W/m², evaporation rates are moderate. Plan to irrigate within the next 24 hours.`;
-        } else {
-          aiResponse = `✅ **No Irrigation Needed**\nSoil moisture is high (${currentData.soilMoisture.toFixed(1)}%). Irrigating now could lead to waterlogging, root rot, and wasted resources. Wait until moisture drops closer to ${moistureThreshold}%.`;
-        }
-      } else if (lowerInput.includes('history') || lowerInput.includes('past') || lowerInput.includes('trend') || lowerInput.includes('maximum') || lowerInput.includes('minimum')) {
-        if (data.length < 2) {
-          aiResponse = "I don't have enough historical data yet to determine trends. Please wait a few moments for the telemetry logs to populate.";
-        } else {
-          const maxTemp = Math.max(...data.map(d => d.airTemp));
-          const minMoisture = Math.min(...data.map(d => d.soilMoisture));
-          const avgHum = data.reduce((acc, curr) => acc + curr.humidity, 0) / data.length;
-          
-          aiResponse = `### 📈 Historical Trend Analysis\n\nBased on your recent session data:\n- **Maximum Air Temperature**: ${maxTemp.toFixed(1)}°C\n- **Minimum Soil Moisture**: ${minMoisture.toFixed(1)}%\n- **Average Humidity**: ${avgHum.toFixed(1)}%\n\nThe data indicates a stable environment, but watch out if that maximum temperature spikes further. You can export the full dataset in the **History & Export** tab.`;
-        }
+      } else if (lowerInput.includes('irrigate') || lowerInput.includes('water')) {
+         if (currentData.soilMoisture < moistureThreshold) {
+            aiResponse = `**Yes, you should irrigate immediately.**\n\nYour current soil moisture is **${currentData.soilMoisture.toFixed(1)}%**, which is below the ${moistureThreshold}% target for ${selectedCrop}. Leaving the crop in this state will cause drought stress.`;
+         } else {
+            aiResponse = `**No, irrigation is not currently required.**\n\nYour current soil moisture is **${currentData.soilMoisture.toFixed(1)}%**, which safely exceeds the ${moistureThreshold}% target for ${selectedCrop}. Overwatering could lead to root rot or fungal diseases.`;
+         }
+      } else if (lowerInput.includes('location') || lowerInput.includes('weather') || lowerInput.includes('gps')) {
+         if (userLocation) {
+             aiResponse = `Your farm is currently registered at GPS coordinates: **${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}**.\n\nI am actively using this location to pull hyper-local forecasting data from Open-Meteo to optimize your ${selectedCrop} irrigation schedules.`;
+         } else {
+             aiResponse = "I do not currently have access to your farm's GPS location. Please allow location services in your browser so I can fetch local weather patterns.";
+         }
       } else {
-        aiResponse = "That's an interesting question. In smart agriculture, leveraging AI to analyze LoRaWAN sensor networks allows for precise resource management. \n\nWould you like me to analyze your specific **soil pH**, **irrigation needs**, generate a **farm report**, or analyze **historical trends**?";
+        aiResponse = `As your AI Farm Chat Assistant, I specialize in analyzing your LoRaWAN telemetry and providing **${selectedCrop}**-specific advice.\n\nCould you clarify? Try asking:\n- "Give me a full farm report"\n- "Analyze historical trends"\n- "Should I water the ${selectedCrop}?"`;
       }
 
       setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
@@ -73,84 +81,109 @@ export default function AIChat() {
 
   return (
     <>
-      <button 
+      {/* Floating Action Button */}
+      <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 p-4 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:scale-110 hover:shadow-[0_0_30px_rgba(168,85,247,0.8)] transition-all flex items-center justify-center duration-300"
+        className="fixed bottom-6 right-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 rounded-full shadow-2xl hover:shadow-indigo-500/50 z-50 flex items-center justify-center gap-2 group"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
-        <Sparkles className="h-7 w-7" />
-      </button>
+        <Bot size={28} className="group-hover:animate-pulse" />
+        <span className="font-bold pr-2 hidden md:block">Farm Chat</span>
+      </motion.button>
 
+      {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: 100, scale: 0.9, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: 100, scale: 0.9, filter: 'blur(10px)' }}
-            className="fixed bottom-24 right-6 z-50 w-[380px] h-[550px] bg-white/90 backdrop-blur-3xl rounded-3xl shadow-2xl border border-white/50 flex flex-col overflow-hidden"
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            className="fixed bottom-24 right-6 w-[400px] h-[600px] bg-white rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden border border-gray-200"
           >
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white flex justify-between items-center shadow-lg relative overflow-hidden">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
-              <div className="flex items-center space-x-3 relative z-10">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 text-white flex justify-between items-center shadow-md">
+              <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
-                  <Bot className="text-white h-6 w-6" />
+                  <Bot size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold tracking-wide">Gemini Assistant</h3>
-                  <p className="text-xs text-purple-200">AI Farm Consultant</p>
+                  <h3 className="font-bold text-lg leading-tight">AI Farm Chat</h3>
+                  <p className="text-xs text-indigo-100 flex items-center gap-1">
+                    <Sparkles size={10} /> Powered by Gemini
+                  </p>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-2 rounded-full transition-colors relative z-10">
-                <X className="h-5 w-5" />
+              <button 
+                onClick={() => setIsOpen(false)}
+                className="hover:bg-white/20 p-2 rounded-full transition-colors"
+              >
+                <X size={20} />
               </button>
             </div>
 
-            <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar">
-              {messages.map((msg, i) => (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  key={i} 
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col gap-4 custom-scrollbar">
+              {messages.map((msg, idx) => (
+                <div 
+                  key={idx} 
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white border border-gray-100 text-gray-800 rounded-bl-none'}`}>
-                    {msg.role === 'user' ? (
-                      msg.text
-                    ) : (
-                      <div className="prose prose-sm prose-purple max-w-none">
+                  <div 
+                    className={`max-w-[85%] p-4 rounded-2xl shadow-sm ${
+                      msg.role === 'user' 
+                        ? 'bg-indigo-600 text-white rounded-tr-sm' 
+                        : 'bg-white text-gray-800 border border-gray-100 rounded-tl-sm'
+                    }`}
+                  >
+                    {msg.role === 'ai' ? (
+                      <div className="prose prose-sm prose-p:leading-snug prose-headings:mb-2 prose-headings:mt-4 first:prose-headings:mt-0 max-w-none text-gray-800">
                         <ReactMarkdown>{msg.text}</ReactMarkdown>
                       </div>
+                    ) : (
+                      <p className="text-sm">{msg.text}</p>
                     )}
                   </div>
-                </motion.div>
+                </div>
               ))}
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="bg-white shadow-sm border border-gray-100 p-4 rounded-2xl rounded-bl-none flex space-x-2 items-center">
-                    <div className="w-2.5 h-2.5 bg-purple-500 rounded-full animate-bounce"></div>
-                    <div className="w-2.5 h-2.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                    <div className="w-2.5 h-2.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                  <div className="bg-white p-4 rounded-2xl rounded-tl-sm border border-gray-100 shadow-sm flex gap-2">
+                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></span>
+                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
                   </div>
                 </div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-3 bg-gray-50/80 backdrop-blur-xl border-t border-gray-200/50">
-              <div className="flex items-center space-x-2 bg-white border border-gray-200 rounded-2xl p-1 shadow-inner">
+            {/* Suggested Chips */}
+            {messages.length === 1 && (
+              <div className="px-4 pb-2 bg-gray-50 flex gap-2 overflow-x-auto no-scrollbar">
+                <button onClick={() => { setInput("Give me a full farm report"); }} className="shrink-0 bg-white border border-indigo-100 text-indigo-700 text-xs px-3 py-1.5 rounded-full hover:bg-indigo-50 flex items-center gap-1 transition-colors"><Sprout size={12}/> Farm Report</button>
+                <button onClick={() => { setInput("Should I irrigate now?"); }} className="shrink-0 bg-white border border-indigo-100 text-indigo-700 text-xs px-3 py-1.5 rounded-full hover:bg-indigo-50 flex items-center gap-1 transition-colors"><Droplets size={12}/> Irrigate?</button>
+                <button onClick={() => { setInput("What are the historical trends?"); }} className="shrink-0 bg-white border border-indigo-100 text-indigo-700 text-xs px-3 py-1.5 rounded-full hover:bg-indigo-50 flex items-center gap-1 transition-colors"><ThermometerSun size={12}/> Trends</button>
+              </div>
+            )}
+
+            {/* Input Area */}
+            <div className="p-4 bg-white border-t border-gray-100">
+              <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-2xl border border-gray-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200 transition-all">
                 <input 
                   type="text" 
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask about your farm..."
-                  className="flex-1 bg-transparent px-4 py-3 focus:outline-none text-gray-700 text-sm"
+                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder="Ask Farm Chat..."
+                  className="flex-1 bg-transparent border-none focus:outline-none px-2 text-sm text-gray-800 placeholder-gray-400"
                 />
                 <button 
                   onClick={handleSend}
-                  disabled={!input.trim() || isTyping}
-                  className="p-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/30 disabled:opacity-50 disabled:hover:shadow-none transition-all duration-300"
+                  disabled={!input.trim()}
+                  className={`p-2 rounded-xl transition-colors ${input.trim() ? 'bg-indigo-600 text-white shadow-md hover:bg-indigo-700' : 'bg-gray-200 text-gray-400'}`}
                 >
-                  <Send className="w-5 h-5" />
+                  <Send size={18} />
                 </button>
               </div>
             </div>
