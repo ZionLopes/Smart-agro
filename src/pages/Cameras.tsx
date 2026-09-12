@@ -12,8 +12,8 @@ const containerVariants = {
 };
 
 const cameras = [
-  { id: 1, name: 'Cam 01 - Tractor Live Feed', type: 'video', url: 'https://cdn.coverr.co/videos/coverr-driving-a-tractor-in-a-field-5103/1080p.mp4', status: 'Online', alerts: 0 },
-  { id: 2, name: 'Cam 02 - Field Aerial View', type: 'video', url: 'https://cdn.coverr.co/videos/coverr-flying-over-a-green-field-4240/1080p.mp4', status: 'Online', alerts: 1 },
+  { id: 1, name: 'Cam 01 - Tractor Live Feed', type: 'youtube', url: 'https://www.youtube.com/embed/YpXq4j14T3Y?autoplay=1&mute=1&controls=0&loop=1&playlist=YpXq4j14T3Y', status: 'Online', alerts: 0 },
+  { id: 2, name: 'Cam 02 - Field Aerial View', type: 'youtube', url: 'https://www.youtube.com/embed/G6jWnN_39dI?autoplay=1&mute=1&controls=0&loop=1&playlist=G6jWnN_39dI', status: 'Online', alerts: 1 },
   { id: 3, name: 'Cam 03 - Greenhouse Interior', type: 'image', url: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?q=80&w=2069&auto=format&fit=crop', status: 'Online', alerts: 0 },
   { id: 4, name: 'Cam 04 - Drone PTZ View', type: 'image', url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2064&auto=format&fit=crop', status: 'Offline', alerts: 0 },
 ];
@@ -72,7 +72,14 @@ export default function Cameras() {
               </div>
             ) : (
               <>
-                {activeCam.type === 'video' ? (
+                {activeCam.type === 'youtube' ? (
+                  <iframe
+                    src={activeCam.url}
+                    className={`w-full h-full object-cover transition-all duration-700 pointer-events-none ${nightVision ? 'grayscale sepia-[.3] hue-rotate-[70deg] contrast-150 brightness-75' : ''}`}
+                    allow="autoplay; encrypted-media"
+                    frameBorder="0"
+                  />
+                ) : activeCam.type === 'video' ? (
                   <video 
                     src={activeCam.url} 
                     autoPlay 
